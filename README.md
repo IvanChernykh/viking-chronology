@@ -1,205 +1,234 @@
 <p align="center">
-  <img src="docs/hero.svg" alt="Viking Chronology — исторический интерактивный 3D-атлас" width="100%" />
+  <a href="https://ivanchernykh.github.io/viking-chronology/">
+    <img src="docs/hero.svg" alt="Viking Chronology — historical interactive 3D atlas" width="100%" />
+  </a>
 </p>
 
 <p align="center">
   <a href="https://ivanchernykh.github.io/viking-chronology/">
-    <img alt="Открыть 3D-атлас" src="https://img.shields.io/badge/ОТКРЫТЬ_3D--АТЛАС-d4b36c?style=for-the-badge&logo=googleearth&logoColor=17110c" />
+    <img alt="Launch atlas" src="https://img.shields.io/badge/LAUNCH_3D_ATLAS-D4B36C?style=for-the-badge&logo=googleearth&logoColor=17110C" />
   </a>
   <a href="https://github.com/IvanChernykh/viking-chronology/actions/workflows/ci.yml">
-    <img alt="CI" src="https://img.shields.io/github/actions/workflow/status/IvanChernykh/viking-chronology/ci.yml?branch=main&style=for-the-badge&label=CI" />
+    <img alt="CI" src="https://img.shields.io/github/actions/workflow/status/IvanChernykh/viking-chronology/ci.yml?branch=main&style=for-the-badge&label=QUALITY_GATE" />
   </a>
   <a href="https://github.com/IvanChernykh/viking-chronology/actions/workflows/pages.yml">
-    <img alt="GitHub Pages" src="https://img.shields.io/github/actions/workflow/status/IvanChernykh/viking-chronology/pages.yml?branch=main&style=for-the-badge&label=PAGES" />
+    <img alt="Pages" src="https://img.shields.io/github/actions/workflow/status/IvanChernykh/viking-chronology/pages.yml?branch=main&style=for-the-badge&label=DEPLOYMENT" />
   </a>
-  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white" />
-  <img alt="Three.js" src="https://img.shields.io/badge/Three.js-r185-111111?style=for-the-badge&logo=threedotjs&logoColor=white" />
-  <img alt="License" src="https://img.shields.io/badge/license-MIT-6f8d77?style=for-the-badge" />
+</p>
+
+<p align="center">
+  <img alt="React" src="https://img.shields.io/badge/React-19-20232A?style=flat-square&logo=react&logoColor=61DAFB" />
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat-square&logo=typescript&logoColor=white" />
+  <img alt="Three.js" src="https://img.shields.io/badge/Three.js-r185-111111?style=flat-square&logo=threedotjs&logoColor=white" />
+  <img alt="Vite" src="https://img.shields.io/badge/Vite-7-646CFF?style=flat-square&logo=vite&logoColor=white" />
+  <img alt="WebGL" src="https://img.shields.io/badge/WebGL-2.0-990000?style=flat-square&logo=webgl&logoColor=white" />
+  <img alt="License" src="https://img.shields.io/badge/License-MIT-6F8D77?style=flat-square" />
 </p>
 
 <h1 align="center">Viking Chronology</h1>
 <p align="center"><strong>Пути северных мореходов · VIII–XI века</strong></p>
 <p align="center">
-  Исторический интерактивный 3D-атлас маршрутов, торговых узлов, поселений и ключевых событий эпохи викингов.
+  Исследовательский интерактивный 3D-атлас маршрутов, торговых узлов, поселений и событий эпохи викингов.
 </p>
 
 <p align="center">
-  <a href="https://ivanchernykh.github.io/viking-chronology/"><strong>Запустить проект</strong></a>
+  <a href="https://ivanchernykh.github.io/viking-chronology/"><strong>Открыть атлас</strong></a>
   ·
-  <a href="#историческая-методология">Методология</a>
+  <a href="#исследовательский-опыт">Исследовать</a>
+  ·
+  <a href="#историческая-дисциплина">Методология</a>
   ·
   <a href="#архитектура">Архитектура</a>
   ·
-  <a href="#мобильная-версия">Mobile</a>
-  ·
-  <a href="#разработка">Разработка</a>
+  <a href="#локальный-запуск">Разработка</a>
 </p>
 
 > [!IMPORTANT]
-> На телефоне запускайте проект через **GitHub Pages**. Встроенные просмотрщики GitHub, Telegram, ChatGPT и iOS Files могут блокировать JavaScript, WebGL и Web Audio при открытии локального HTML-файла.
+> **GitHub Pages требует однократной активации владельцем репозитория.** Откройте [`Settings → Pages`](https://github.com/IvanChernykh/viking-chronology/settings/pages), в поле **Source** выберите **GitHub Actions**. После этого workflow автоматически соберёт и опубликует сайт по адресу `ivanchernykh.github.io/viking-chronology`.
 
-<p align="center">
-  <img src="docs/interface-preview.svg" alt="Интерфейс Viking Chronology" width="94%" />
-</p>
-
-## Проект в одном абзаце
-
-**Viking Chronology** объединяет Three.js, React Three Fiber, TypeScript и Web Audio API в одном полноэкранном историческом опыте. Пользователь исследует глобус, выбирает доказательные маршрутные коридоры, открывает карточки остановок, перемещается по хронологии 750–1021 годов и слышит процедурно синтезированную звуковую среду — без фэнтезийной стилизации и без выдачи реконструкции за подлинную запись прошлого.
-
-## Ключевые возможности
+---
 
 <table>
 <tr>
-<td width="50%" valign="top">
-
-### Исторический атлас
-
-- 3 крупных направления движения;
-- 19 интерактивных остановок;
-- датировка, современная география и тип события;
-- доказательная база и уровень уверенности;
-- прямые ссылки на институциональные источники.
-
-</td>
-<td width="50%" valign="top">
-
-### 3D-визуализация
-
-- процедурный глобус и атмосфера;
-- дуги многолетних маршрутов;
-- детализированные модели кораблей;
-- плавная камера и ручная навигация;
-- **автовращение полностью отсутствует**.
-
-</td>
+<td align="center" width="25%"><strong>750–1021</strong><br/><sub>хронологический диапазон</sub></td>
+<td align="center" width="25%"><strong>3</strong><br/><sub>исторических коридора</sub></td>
+<td align="center" width="25%"><strong>19</strong><br/><sub>интерактивных локаций</sub></td>
+<td align="center" width="25%"><strong>3 GPU-профиля</strong><br/><sub>high · balanced · battery</sub></td>
 </tr>
+</table>
+
+## Не статическая карта. Исторический инструмент исследования.
+
+**Viking Chronology** соединяет исторический набор данных, пространственную визуализацию, хронологию и доказательную базу в одном полноэкранном интерфейсе. Пользователь не наблюдает за автоматической анимацией — он самостоятельно управляет глобусом, выбирает маршруты, открывает точки, сопоставляет даты и проверяет источники.
+
+<p align="center">
+  <img src="docs/interface-preview.svg" alt="Desktop and mobile interface preview" width="100%" />
+</p>
+
+<table>
 <tr>
-<td width="50%" valign="top">
+<td width="33%" valign="top">
 
-### Взаимодействие
+### Ручное исследование
 
-- увеличенные области попадания маркеров;
-- надёжный tap/click на мобильных устройствах;
-- карточка не закрывается случайным кликом по сцене;
-- навигация между соседними точками;
-- крупные touch-targets и safe-area.
+Глобус не вращается автоматически. Камера, масштаб, направление и временная позиция полностью контролируются пользователем.
 
 </td>
-<td width="50%" valign="top">
+<td width="33%" valign="top">
 
-### Звуковая реконструкция
+### Истории локаций
 
-- море, ветер, река, дерево и вёсла;
-- дальний рог, дрон и щипковые тембры;
-- отдельные миксы по типу локации;
-- независимая громкость среды и музыки;
-- запуск только после действия пользователя.
+Каждая точка раскрывает датировку, современную географию, исторический контекст, основание реконструкции и уровень уверенности.
+
+</td>
+<td width="33%" valign="top">
+
+### Проверяемость
+
+Маршруты трактуются как многолетние коридоры, а не выдуманный GPS-трек одной экспедиции. Спорные утверждения маркируются явно.
 
 </td>
 </tr>
 </table>
 
-## Что было исправлено
+## Исследовательский опыт
 
-### V4 — маркеры и ручная навигация
+<p align="center">
+  <img src="docs/experience-flow.svg" alt="Explore, inspect and verify workflow" width="100%" />
+</p>
 
-- удалено автовращение глобуса из состояния, UI и `OrbitControls`;
-- область raycast каждой точки увеличена невидимой геометрией;
-- выбор обрабатывается через `pointerdown`/`pointerup` с сенсорным допуском;
-- маркер блокирует конфликт жеста с камерой;
-- карточка истории закрывается только явно — кнопкой или `Escape`;
-- размеры DOM-меток и визуальных маркеров увеличены.
+### Что происходит в интерфейсе
 
-### V3 — мобильная стабильность и плавность
+- **Explore:** ручное вращение глобуса, масштабирование, фильтрация маршрутов и перемещение по шкале 750–1021 годов.
+- **Inspect:** tap/click по увеличенной интерактивной области маркера открывает информационную карточку без конфликта с жестом камеры.
+- **Verify:** пользователь видит доказательства, степень уверенности и ссылки на институциональные источники.
 
-- JavaScript target снижен до **ES2018**;
-- standalone собирается как классический IIFE без `type="module"`;
-- добавлены WebGL fallback, Error Boundary и context-loss recovery;
-- Three.js загружается после первичного интерфейса;
-- убраны постоянные изменения DPR;
-- корабли движутся по `CatmullRomCurve3`;
-- ориентация рассчитывается по касательной и нормали глобуса;
-- quaternion-повороты сглаживаются через `slerp`;
-- переход конца маршрута скрыт fade/scale envelope.
+## Три направления движения
 
-## Мобильная версия
+<table>
+<tr>
+<td width="33%" valign="top">
 
-| Область | Реализация |
+### Северная Атлантика
+
+Исландия, Гренландия и североамериканский археологический горизонт. Морские переходы, поселения и предел западного продвижения.
+
+</td>
+<td width="33%" valign="top">
+
+### Западная Европа
+
+Британские острова, Франкское побережье и зоны торговли, войны, колонизации и политической интеграции.
+
+</td>
+<td width="33%" valign="top">
+
+### Восточные реки
+
+Балтика, речные системы Восточной Европы и связи с Византией и исламским миром.
+
+</td>
+</tr>
+</table>
+
+## Визуальная и звуковая система
+
+| Система | Реализация |
 |---|---|
-| Совместимость | ES2018, Safari fallback API, WebGL diagnostics |
-| Layout | Portrait, landscape, safe-area, нижняя карточка |
-| Touch | Увеличенные hit-targets, допуск движения пальца |
-| GPU | Профили `high`, `balanced`, `battery` |
-| Надёжность | Context recovery и управляемое снижение качества |
-| Доступность | `prefers-reduced-motion`, контрастность, ARIA-labels |
-
-Подробная матрица: [`docs/MOBILE-COMPATIBILITY.md`](docs/MOBILE-COMPATIBILITY.md).
-
-## Производительность
-
-Проект использует стабильный, а не постоянно изменяющийся DPR. Уровень качества выбирается по профилю устройства и может понизиться только после устойчиво низкого FPS.
-
-Основные меры:
-
-- 3D-сцена отделена от частоты React-обновлений;
-- хронология ограничена примерно 20 обновлениями/сек. на desktop и 11 на mobile;
-- геометрия, звёзды, освещение и текстуры масштабируются по профилю;
-- тяжёлые визуальные фильтры отключаются на слабых устройствах;
-- маршруты и картографические данные мемоизируются;
-- production bundle разделён на React, Three.js и геоданные.
-
-Подробности: [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md).
-
-## Историческая методология
-
-Маршруты представлены как **многолетние исторические коридоры**, а не GPS-трек одной флотилии. Каждая остановка содержит:
-
-1. датировку и современную географию;
-2. краткое историческое описание;
-3. основание реконструкции;
-4. уровень уверенности;
-5. проверяемые источники.
-
-Используются материалы National Museum of Denmark, UNESCO, English Heritage и других институциональных источников. Спорные положения маркируются отдельно.
+| Глобус | Процедурная текстура, атмосфера, маршруты и адаптивная геометрия |
+| Корабли | `CatmullRomCurve3`, касательная маршрута, нормаль глобуса и quaternion `slerp` |
+| Маркеры | Увеличенные невидимые hit-зоны, touch tolerance, независимый click/tap |
+| Камера | Только ручное управление; автовращение отсутствует на уровне `OrbitControls` |
+| Хронология | Отделена от частоты рендера Three.js и ограничена по частоте React-обновлений |
+| Звук | Процедурная реконструкция моря, ветра, дерева, вёсел и инструментальных тембров |
 
 > [!NOTE]
-> Подлинных аудиозаписей эпохи викингов не существует. Звуковой слой является исследовательской реконструкцией природной среды, материалов судна и вероятных инструментальных тембров.
+> Подлинных аудиозаписей эпохи викингов не существует. Звуковой слой — художественно-исследовательская реконструкция природной среды, материалов судна и вероятных тембров, а не заявление об исторической аутентичности записи.
 
-Полный документ: [`docs/HISTORICAL-METHODOLOGY.md`](docs/HISTORICAL-METHODOLOGY.md).
+## Mobile-first надёжность
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### Совместимость
+
+- production target **ES2018**;
+- standalone в формате classic IIFE;
+- fallback для старого Safari MediaQuery API;
+- WebGL2 diagnostics;
+- Error Boundary и восстановление `webglcontextlost`;
+- safe-area для iPhone и адаптивный portrait layout.
+
+</td>
+<td width="50%" valign="top">
+
+### Производительность
+
+- стабильный DPR вместо постоянного изменения разрешения;
+- профили `high`, `balanced`, `battery`;
+- автоматическое однонаправленное снижение качества при устойчиво низком FPS;
+- уменьшение сегментов, света, звёзд и текстур на слабых GPU;
+- lazy-loading 3D-сцены после первичного UI.
+
+</td>
+</tr>
+</table>
+
+Подробности: [Mobile compatibility](docs/MOBILE-COMPATIBILITY.md) · [Performance budget](docs/PERFORMANCE.md)
+
+## Историческая дисциплина
+
+Проект отделяет **фактические данные**, **обоснованную реконструкцию** и **визуальное представление**.
+
+Каждая локация содержит:
+
+1. датировку или временной диапазон;
+2. современную географическую привязку;
+3. краткий исторический контекст;
+4. основание реконструкции;
+5. уровень уверенности;
+6. проверяемые источники.
+
+Используются материалы National Museum of Denmark, UNESCO, English Heritage и других институциональных источников. Полный подход описан в [`docs/HISTORICAL-METHODOLOGY.md`](docs/HISTORICAL-METHODOLOGY.md).
 
 ## Архитектура
+
+<p align="center">
+  <img src="docs/architecture-map.svg" alt="Viking Chronology system architecture" width="100%" />
+</p>
 
 ```text
 src/
 ├── components/
-│   ├── VikingScene.tsx       # Canvas, камера, GPU-профили, context recovery
-│   ├── Globe.tsx             # глобус и картографическая текстура
-│   ├── RouteArc.tsx          # дуги маршрутов
-│   ├── MovingShip.tsx        # интерполяция и плавная ориентация корабля
-│   ├── StopMarker.tsx        # увеличенные интерактивные исторические точки
-│   ├── StoryPanel.tsx        # история, доказательства и источники
-│   ├── Timeline.tsx          # временная шкала
-│   └── SceneFallback.tsx     # управляемый отказ WebGL
-├── data/routes.ts            # исторический набор данных
-├── hooks/                    # media query и аудиоуправление
-├── lib/                      # геометрия, device profile, audio, texture pipeline
-└── styles/                   # слоистая адаптивная дизайн-система
+│   ├── VikingScene.tsx       # Canvas, camera, device profile, context recovery
+│   ├── Globe.tsx             # globe and procedural cartographic texture
+│   ├── RouteArc.tsx          # historical route corridors
+│   ├── MovingShip.tsx        # curve motion and quaternion orientation
+│   ├── StopMarker.tsx        # touch-safe historical markers
+│   ├── StoryPanel.tsx        # evidence, narrative and sources
+│   └── Timeline.tsx          # chronology controls
+├── data/routes.ts            # historical evidence model
+├── hooks/                    # media query and audio controls
+├── lib/                      # geo, device profile, audio and texture pipeline
+└── styles/                   # layered responsive design system
 ```
 
-Расширенное описание: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+Полное описание: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 
-## Технологический стек
+## Исправления V4
 
-<p>
-  <img src="https://img.shields.io/badge/React-19-20232A?style=flat-square&logo=react&logoColor=61DAFB" alt="React" />
-  <img src="https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript" />
-  <img src="https://img.shields.io/badge/Three.js-r185-111111?style=flat-square&logo=threedotjs&logoColor=white" alt="Three.js" />
-  <img src="https://img.shields.io/badge/React_Three_Fiber-9-111111?style=flat-square" alt="React Three Fiber" />
-  <img src="https://img.shields.io/badge/Vite-7-646CFF?style=flat-square&logo=vite&logoColor=white" alt="Vite" />
-  <img src="https://img.shields.io/badge/Web_Audio-API-9a7946?style=flat-square" alt="Web Audio API" />
-</p>
+- полностью удалено автовращение глобуса;
+- увеличена raycast-область исторических маркеров;
+- tap/click отделён от жеста вращения камеры;
+- добавлен допустимый сдвиг пальца при нажатии;
+- информационная карточка закрывается только явным действием;
+- движение кораблей переведено на плавные кривые и quaternion-сглаживание;
+- мобильная сборка и standalone совместимы с более широким диапазоном браузеров.
 
-## Разработка
+Release notes: [`docs/RELEASE.md`](docs/RELEASE.md)
+
+## Локальный запуск
 
 Требования: **Node.js 22+**.
 
@@ -210,53 +239,72 @@ npm install
 npm run dev
 ```
 
-Production-сборка:
+### Полная проверка
+
+```bash
+npm run check
+```
+
+Проверка включает ESLint, строгий TypeScript, production build, standalone build и mobile compatibility verifier.
+
+### Production
 
 ```bash
 npm run build
 npm run preview
 ```
 
-Полная проверка:
-
-```bash
-npm run check
-```
-
-Команда запускает ESLint, строгий TypeScript, production build, standalone build и compatibility verifier.
-
-## Автономный HTML
+### Автономный HTML
 
 ```bash
 npm run standalone
 ```
 
-Результат: `viking-chronology-standalone.html`.
-
-Этот файл предназначен для архива и локальной демонстрации. Для стабильного запуска на телефоне используйте HTTPS-версию GitHub Pages.
+Результат: `viking-chronology-standalone.html`. Для телефона предпочтительна HTTPS-версия через GitHub Pages, поскольку встроенные просмотрщики файлов могут блокировать JavaScript, WebGL и Web Audio.
 
 ## GitHub Pages
 
-Публикация выполняется workflow-файлом `.github/workflows/pages.yml` после push в `main`.
+Workflow `.github/workflows/pages.yml` автоматически:
 
-Публичный адрес:
+1. устанавливает зависимости;
+2. создаёт production build;
+3. загружает Pages artifact;
+4. публикует его в окружение `github-pages`.
 
-**https://ivanchernykh.github.io/viking-chronology/**
+Для первого запуска владелец репозитория должен один раз выбрать **GitHub Actions** в [`Settings → Pages`](https://github.com/IvanChernykh/viking-chronology/settings/pages). Это требование платформы GitHub, а не приложения.
 
-При первом развёртывании откройте **Settings → Pages** и установите источник **GitHub Actions**.
+## Документация
 
-## Качество и сопровождение
+<table>
+<tr>
+<td width="50%">
 
-- [Сообщить о дефекте](https://github.com/IvanChernykh/viking-chronology/issues/new/choose)
-- [Правила участия](CONTRIBUTING.md)
-- [Security policy](SECURITY.md)
-- [Мобильная совместимость](docs/MOBILE-COMPATIBILITY.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Historical methodology](docs/HISTORICAL-METHODOLOGY.md)
+- [Mobile compatibility](docs/MOBILE-COMPATIBILITY.md)
+
+</td>
+<td width="50%">
+
 - [Performance budget](docs/PERFORMANCE.md)
+- [Release notes](docs/RELEASE.md)
+- [Security policy](SECURITY.md)
 
-## Лицензия
+</td>
+</tr>
+</table>
 
-Распространяется по лицензии [MIT](LICENSE). Материалы внешних институциональных источников принадлежат соответствующим правообладателям.
+## Contribution
+
+Дефекты и предложения принимаются через [GitHub Issues](https://github.com/IvanChernykh/viking-chronology/issues/new/choose). Перед изменениями ознакомьтесь с [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+## License
+
+Исходный код распространяется по лицензии [MIT](LICENSE). Материалы внешних институциональных источников принадлежат соответствующим правообладателям.
+
+---
 
 <p align="center">
-  <sub>Создано как технически строгая и исторически дисциплинированная интерактивная реконструкция.</sub>
+  <strong>Built as an evidence-led historical interface.</strong><br/>
+  <sub>Не фэнтезийная карта. Не автоматическая демонстрация. Инструмент пространственного исследования.</sub>
 </p>
