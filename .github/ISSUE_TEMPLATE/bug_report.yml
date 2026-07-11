@@ -1,0 +1,37 @@
+name: Bug report
+about: Сообщить о техническом дефекте
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Описание
+      description: Что произошло и что ожидалось?
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Устройство и ОС
+      placeholder: iPhone 14, iOS 18
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Браузер
+      placeholder: Safari 18
+    validations:
+      required: true
+  - type: dropdown
+    id: quality
+    attributes:
+      label: Профиль качества
+      options: [auto, high, balanced, battery]
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Шаги воспроизведения
+    validations:
+      required: true

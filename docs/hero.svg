@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-labelledby="title desc">
+  <title id="title">Пути северных мореходов</title>
+  <desc id="desc">Историческая интерактивная 3D-карта маршрутов викингов</desc>
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="42%" r="70%"><stop stop-color="#3f2a19"/><stop offset=".58" stop-color="#17110c"/><stop offset="1" stop-color="#080705"/></radialGradient>
+    <linearGradient id="gold" x1="0" x2="1"><stop stop-color="#9a7946"/><stop offset=".5" stop-color="#ead49f"/><stop offset="1" stop-color="#9a7946"/></linearGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="7" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="1200" height="420" rx="28" fill="url(#bg)"/>
+  <path d="M0 58h1200M0 362h1200" stroke="#d4b36c" stroke-opacity=".22"/>
+  <g fill="none" stroke="#d4b36c" stroke-opacity=".3"><circle cx="600" cy="210" r="146"/><circle cx="600" cy="210" r="126"/><path d="M454 210h292M600 64v292M478 132c70 47 174 47 244 0M478 288c70-47 174-47 244 0"/></g>
+  <g fill="none" stroke-linecap="round" filter="url(#glow)"><path d="M505 242c69-94 159-119 239-79" stroke="#d4b36c" stroke-width="4"/><path d="M496 224c-35-46-73-55-116-31" stroke="#a94b35" stroke-width="4"/><path d="M566 285c46 30 94 37 147 18" stroke="#6f8d77" stroke-width="4"/></g>
+  <g fill="#ead49f"><circle cx="505" cy="242" r="7"/><circle cx="744" cy="163" r="7"/><circle cx="380" cy="193" r="7"/><circle cx="713" cy="303" r="7"/></g>
+  <rect x="70" y="83" width="170" height="43" rx="21.5" fill="#2a1c13" stroke="#d4b36c" stroke-opacity=".45"/>
+  <text x="155" y="110" text-anchor="middle" fill="#d8c49a" font-family="Arial" font-size="15" font-weight="700" letter-spacing="2">VIII–XI ВЕКА</text>
+  <text x="600" y="177" text-anchor="middle" fill="#f2e5c5" font-family="Georgia,serif" font-size="49" font-weight="600">Пути северных мореходов</text>
+  <text x="600" y="224" text-anchor="middle" fill="#b9a985" font-family="Arial" font-size="19" letter-spacing="1.5">ИСТОРИЧЕСКИЙ ИНТЕРАКТИВНЫЙ 3D-АТЛАС</text>
+  <text x="600" y="333" text-anchor="middle" fill="#d4b36c" font-family="Arial" font-size="14" letter-spacing="3">THREE.JS · TYPESCRIPT · REACT · WEB AUDIO</text>
+  <text x="600" y="388" text-anchor="middle" fill="#8e7c5d" font-family="serif" font-size="18" letter-spacing="9">ᚠ ᚢ ᚦ ᚬ ᚱ ᚴ ᚼ ᚾ ᛁ ᛅ ᛋ ᛏ ᛒ ᛘ ᛚ ᛦ</text>
+</svg>

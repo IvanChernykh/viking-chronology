@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-labelledby="title desc">
+  <title id="title">Интерфейс 3D-атласа</title><desc id="desc">Схематический preview интерфейса с глобусом, маршрутами, панелью и хронологией</desc>
+  <defs><radialGradient id="o"><stop stop-color="#233334"/><stop offset="1" stop-color="#0e1717"/></radialGradient><linearGradient id="p" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#3b291b"/><stop offset="1" stop-color="#17110d"/></linearGradient></defs>
+  <rect width="1280" height="720" rx="24" fill="#090806"/>
+  <circle cx="680" cy="344" r="247" fill="url(#o)" stroke="#a88c5a" stroke-opacity=".35"/>
+  <g fill="none" stroke="#a88c5a" stroke-opacity=".18"><ellipse cx="680" cy="344" rx="247" ry="92"/><ellipse cx="680" cy="344" rx="92" ry="247"/><path d="M433 344h494M680 97v494"/></g>
+  <path d="M540 395c72-154 208-190 315-104" fill="none" stroke="#d4b36c" stroke-width="5" stroke-linecap="round"/>
+  <path d="M522 343c-92-65-170-44-222 18" fill="none" stroke="#a94b35" stroke-width="5" stroke-linecap="round"/>
+  <path d="M615 471c86 53 173 53 258 7" fill="none" stroke="#6f8d77" stroke-width="5" stroke-linecap="round"/>
+  <g fill="#f0dfb0"><circle cx="540" cy="395" r="8"/><circle cx="855" cy="291" r="8"/><circle cx="300" cy="361" r="8"/><circle cx="873" cy="478" r="8"/></g>
+  <rect x="28" y="74" width="300" height="530" rx="18" fill="url(#p)" stroke="#d4b36c" stroke-opacity=".3"/>
+  <text x="58" y="119" fill="#d4b36c" font-family="Arial" font-size="12" letter-spacing="2">НАПРАВЛЕНИЯ</text>
+  <g font-family="Georgia" font-size="19" fill="#ead9af"><text x="58" y="163">Все маршруты</text><text x="58" y="225">Северная Атлантика</text><text x="58" y="287">Западная Европа</text><text x="58" y="349">Восточные реки</text></g>
+  <g fill="none" stroke="#d4b36c" stroke-opacity=".25"><rect x="48" y="134" width="260" height="46" rx="8"/><rect x="48" y="196" width="260" height="46" rx="8"/><rect x="48" y="258" width="260" height="46" rx="8"/><rect x="48" y="320" width="260" height="46" rx="8"/></g>
+  <text x="58" y="416" fill="#d4b36c" font-family="Arial" font-size="12" letter-spacing="2">СЦЕНА И ЗВУК</text>
+  <g fill="#b9a985" font-family="Arial" font-size="15"><text x="58" y="458">Корабли и плавная навигация</text><text x="58" y="498">Автопрофиль производительности</text><text x="58" y="538">Историческая звуковая среда</text></g>
+  <rect x="353" y="28" width="899" height="62" rx="14" fill="#17110d" stroke="#d4b36c" stroke-opacity=".24"/>
+  <text x="382" y="55" fill="#a88c5a" font-family="Arial" font-size="10" letter-spacing="2">ИСТОРИЧЕСКИЙ АТЛАС VIII–XI ВЕКОВ</text>
+  <text x="382" y="78" fill="#f2e5c5" font-family="Georgia" font-size="24">Пути северных мореходов</text>
+  <rect x="353" y="624" width="899" height="68" rx="14" fill="#17110d" stroke="#d4b36c" stroke-opacity=".24"/>
+  <text x="382" y="654" fill="#d4b36c" font-family="Georgia" font-size="25">1021</text><text x="447" y="653" fill="#8f8167" font-family="Arial" font-size="12">ГОД Н. Э.</text>
+  <rect x="382" y="671" width="835" height="4" rx="2" fill="#4b3924"/><rect x="382" y="671" width="782" height="4" rx="2" fill="#d4b36c"/><circle cx="1164" cy="673" r="9" fill="#ead49f"/>
+</svg>

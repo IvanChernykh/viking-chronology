@@ -1,0 +1,7 @@
+node_modules
+dist
+standalone-dist
+viking-chronology-standalone.html
+.DS_Store
+*.local
+.vscode
