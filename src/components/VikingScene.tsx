@@ -1,14 +1,19 @@
-import { OrbitControls, Stars } from '@react-three/drei';
+import { ContactShadows, MapControls, Sky } from '@react-three/drei';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type ComponentRef, type RefObject } from 'react';
 import * as THREE from 'three';
+import type { VikingCharacter } from '../data/dialogues';
+import { allStops } from '../data/routes';
 import { readDeviceProfile, resolveRenderQuality, supportsWebGL2 } from '../lib/deviceProfile';
-import { latLonToVector3 } from '../lib/geo';
+import { latLonToMap } from '../lib/flatMap';
 import type { RenderQuality, VikingRoute, VikingStop } from '../types';
-import { Globe } from './Globe';
-import { RouteArc } from './RouteArc';
+import { ExplorationFog } from './ExplorationFog';
+import { GroundRoute } from './GroundRoute';
+import { MapSurface } from './MapSurface';
 import { SceneFallback } from './SceneFallback';
-import { StopMarker } from './StopMarker';
+import { VikingCamp } from './VikingCamp';
+import { WorldDecor } from './WorldDecor';
+import { WorldStopMarker } from './WorldStopMarker';
 
 interface VikingSceneProps {
   routes: VikingRoute[];
@@ -20,9 +25,11 @@ interface VikingSceneProps {
   renderQuality: RenderQuality;
   isMobile: boolean;
   onSelectStop: (stop: VikingStop) => void;
+  onSpeakCharacter: (character: VikingCharacter) => void;
 }
 
 type RuntimeQuality = Exclude<RenderQuality, 'auto'>;
+type MapControlsHandle = ComponentRef<typeof MapControls>;
 
 function lowerQuality(quality: RuntimeQuality): RuntimeQuality {
   if (quality === 'high') return 'balanced';
@@ -34,62 +41,79 @@ function leastDemandingQuality(left: RuntimeQuality, right: RuntimeQuality): Run
   return rank[left] <= rank[right] ? left : right;
 }
 
-function CameraRig({ focusStop, isMobile }: { focusStop: VikingStop | null; isMobile: boolean }) {
+function CameraRig({ focusStop, isMobile, controlsRef }: {
+  focusStop: VikingStop | null;
+  isMobile: boolean;
+  controlsRef: RefObject<MapControlsHandle | null>;
+}) {
   const { camera } = useThree();
-  const desiredPosition = useRef(new THREE.Vector3(0.8, 2.7, 7.4));
+  const target = useRef(latLonToMap(59.1, 10.1, 0));
+  const position = useRef(new THREE.Vector3());
   const animationRemaining = useRef(0);
 
+  const setDesiredView = useCallback((stop: VikingStop | null) => {
+    const nextTarget = stop ? latLonToMap(stop.lat, stop.lon, 0) : latLonToMap(59.1, 10.1, 0);
+    target.current.copy(nextTarget);
+    const offset = isMobile
+      ? new THREE.Vector3(3.1, 4.3, 5.6)
+      : new THREE.Vector3(4.2, 5.7, 7.4);
+    position.current.copy(nextTarget).add(offset);
+    animationRemaining.current = 1.35;
+  }, [isMobile]);
+
   useEffect(() => {
-    if (focusStop) {
-      const surface = latLonToVector3(focusStop.lat, focusStop.lon, 1).normalize();
-      desiredPosition.current
-        .copy(surface.multiplyScalar(isMobile ? 6.95 : 6.15))
-        .add(new THREE.Vector3(0, isMobile ? 0.6 : 0.35, 0));
-    } else {
-      desiredPosition.current.set(0.8, isMobile ? 2.95 : 2.7, isMobile ? 8.2 : 7.4);
+    setDesiredView(focusStop);
+  }, [focusStop, setDesiredView]);
+
+  useEffect(() => {
+    const startTarget = latLonToMap(59.1, 10.1, 0);
+    const offset = isMobile
+      ? new THREE.Vector3(3.1, 4.3, 5.6)
+      : new THREE.Vector3(4.2, 5.7, 7.4);
+    camera.position.copy(startTarget).add(offset);
+    camera.lookAt(startTarget);
+    if (controlsRef.current) {
+      controlsRef.current.target.copy(startTarget);
+      controlsRef.current.update();
     }
-    animationRemaining.current = 1.1;
-  }, [focusStop, isMobile]);
+  }, [camera, controlsRef, isMobile]);
 
   useFrame((_, rawDelta) => {
     if (animationRemaining.current <= 0) return;
-    const delta = Math.min(rawDelta, 1 / 20);
-    const interpolation = 1 - Math.exp(-delta * 5.4);
-    camera.position.lerp(desiredPosition.current, interpolation);
-    camera.lookAt(0, 0, 0);
+    const delta = Math.min(rawDelta, 1 / 24);
+    const alpha = 1 - Math.exp(-delta * 5.8);
+    camera.position.lerp(position.current, alpha);
+    if (controlsRef.current) {
+      controlsRef.current.target.lerp(target.current, alpha);
+      controlsRef.current.update();
+    } else {
+      camera.lookAt(target.current);
+    }
     animationRemaining.current -= delta;
   });
 
   return null;
 }
 
-function FrameBudgetGuard({
-  quality,
-  onDecline,
-}: {
-  quality: RuntimeQuality;
-  onDecline: () => void;
-}) {
+function FrameBudgetGuard({ quality, onDecline }: { quality: RuntimeQuality; onDecline: () => void }) {
   const elapsed = useRef(0);
-  const frameCount = useRef(0);
+  const frames = useRef(0);
   const measured = useRef(false);
 
   useFrame((_, rawDelta) => {
     if (measured.current || quality === 'battery' || document.hidden) return;
-    const delta = Math.min(rawDelta, 0.12);
-    elapsed.current += delta;
-    frameCount.current += 1;
-
-    if (elapsed.current >= 4.5) {
-      const averageFps = frameCount.current / elapsed.current;
+    elapsed.current += Math.min(rawDelta, 0.12);
+    frames.current += 1;
+    if (elapsed.current >= 5) {
+      const fps = frames.current / elapsed.current;
       measured.current = true;
-      if (averageFps < 32) onDecline();
+      if (fps < 31) onDecline();
     }
   });
 
   useEffect(() => {
     elapsed.current = 0;
-    frameCount.current = 0;
+    frames.current = 0;
     measured.current = false;
   }, [quality]);
 
@@ -105,117 +129,96 @@ function SceneContent({
   shipSpeed,
   isMobile,
   onSelectStop,
+  onSpeakCharacter,
   quality,
-  reducedMotion,
   onQualityDecline,
 }: Omit<VikingSceneProps, 'renderQuality'> & {
   quality: RuntimeQuality;
-  reducedMotion: boolean;
   onQualityDecline: () => void;
 }) {
   const compact = quality === 'battery';
-  const segmentEntries = useMemo(
-    () =>
-      routes.flatMap((route, routeIndex) =>
-        route.stops.slice(1).map((stop, stopIndex) => ({
-          route,
-          routeIndex,
-          start: route.stops[stopIndex],
-          end: stop,
-          segmentIndex: stopIndex,
-        })),
-      ),
-    [routes],
-  );
-
-  const latestCompletedSegment = useMemo(
-    () =>
-      Object.fromEntries(
-        routes.map((route) => {
-          let latest = -1;
-          route.stops.slice(1).forEach((stop, index) => {
-            if (stop.year <= timelineYear) latest = index;
-          });
-          return [route.id, latest];
-        }),
-      ) as Record<string, number>,
-    [routes, timelineYear],
-  );
-
-  const stars = quality === 'high' ? 1800 : quality === 'balanced' ? 900 : 360;
+  const controlsRef = useRef<MapControlsHandle>(null);
 
   return (
     <>
-      <color attach="background" args={['#0b0a08']} />
-      <fog attach="fog" args={['#0b0a08', 8.2, 17]} />
-      <hemisphereLight args={['#d7c8a3', '#17100b', compact ? 0.68 : 0.88]} />
+      <color attach="background" args={['#071315']} />
+      <fog attach="fog" args={['#071315', isMobile ? 9 : 11, isMobile ? 23 : 28]} />
+      {!compact && <Sky distance={450000} sunPosition={[-9, 8, -5]} inclination={0.47} azimuth={0.22} turbidity={8.5} rayleigh={1.7} mieCoefficient={0.008} mieDirectionalG={0.82} />}
+      <hemisphereLight args={['#d8d7c3', '#13231f', compact ? 1.35 : 1.65]} />
       <directionalLight
-        position={[-5, 4, 6]}
-        intensity={compact ? 1.85 : 2.35}
-        color="#f5dfaf"
+        castShadow={!compact}
+        position={[-6, 10, 8]}
+        intensity={compact ? 2.15 : 3.25}
+        color="#ffdda6"
+        shadow-mapSize-width={quality === 'high' ? 1536 : 768}
+        shadow-mapSize-height={quality === 'high' ? 1536 : 768}
+        shadow-camera-near={1}
+        shadow-camera-far={30}
+        shadow-camera-left={-10}
+        shadow-camera-right={10}
+        shadow-camera-top={8}
+        shadow-camera-bottom={-8}
       />
-      <pointLight position={[4, -1, -5]} intensity={compact ? 8 : 14} distance={13} color="#456b78" />
-      {!compact && <pointLight position={[-4, 1, 2]} intensity={4.5} distance={9} color="#8f3d24" />}
-      <Stars
-        radius={70}
-        depth={42}
-        count={stars}
-        factor={compact ? 1.7 : 2.2}
-        saturation={0.12}
-        fade
-        speed={reducedMotion ? 0 : 0.055}
-      />
+      <pointLight position={[3, 3, -1]} intensity={compact ? 2.5 : 4.5} color="#6aa5a4" distance={15} />
 
-      <Globe quality={quality} />
+      <MapSurface quality={quality} />
+      <WorldDecor timelineYear={timelineYear} stops={allStops} compact={compact} />
 
-      {segmentEntries.map(({ route, routeIndex, start, end, segmentIndex }) => {
-        const denominator = Math.max(1, end.year - start.year);
-        const revealProgress = THREE.MathUtils.clamp((timelineYear - start.year) / denominator, 0, 1);
-        const emphasized = activeRouteId === 'all' || activeRouteId === route.id;
+      {routes.map((route) => (
+        <GroundRoute
+          key={route.id}
+          route={route}
+          timelineYear={timelineYear}
+          emphasized={activeRouteId === 'all' || activeRouteId === route.id}
+          shipsEnabled={shipsEnabled}
+          shipSpeed={shipSpeed}
+          compact={compact || isMobile}
+        />
+      ))}
 
-        return (
-          <RouteArc
-            key={`${route.id}-${start.id}-${end.id}`}
-            start={start}
-            end={end}
-            color={route.color}
-            revealProgress={revealProgress}
-            shipSpeed={shipSpeed}
-            shipsEnabled={shipsEnabled && emphasized && segmentIndex === latestCompletedSegment[route.id]}
-            emphasized={emphasized}
-            shipOffset={(routeIndex * 0.23 + segmentIndex * 0.31) % 1}
-            compact={compact}
-          />
-        );
-      })}
+      {routes.flatMap((route) => route.stops.map((stop) => (
+        <WorldStopMarker
+          key={stop.id}
+          stop={stop}
+          color={route.color}
+          active={stop.year <= timelineYear}
+          selected={selectedStop?.id === stop.id}
+          dimmed={activeRouteId !== 'all' && activeRouteId !== route.id}
+          compact={compact || isMobile}
+          onSelect={onSelectStop}
+        />
+      )))}
 
-      {routes.flatMap((route) =>
-        route.stops.map((stop) => (
-          <StopMarker
-            key={stop.id}
-            stop={stop}
-            routeColor={route.color}
-            active={stop.year <= timelineYear}
-            selected={selectedStop?.id === stop.id}
-            dimmed={activeRouteId !== 'all' && activeRouteId !== route.id}
-            compact={isMobile || compact}
-            animate={!reducedMotion && !compact}
-            onSelect={onSelectStop}
-          />
-        )),
+      <VikingCamp compact={compact || isMobile} onSpeak={onSpeakCharacter} />
+      <ExplorationFog timelineYear={timelineYear} compact={compact || isMobile} />
+
+      {!compact && (
+        <ContactShadows
+          position={[0, 0.025, 0]}
+          opacity={0.35}
+          scale={18}
+          blur={2.4}
+          far={3.5}
+          frames={1}
+          color="#020706"
+        />
       )}
 
-      <CameraRig focusStop={selectedStop} isMobile={isMobile} />
-      <OrbitControls
+      <CameraRig focusStop={selectedStop} isMobile={isMobile} controlsRef={controlsRef} />
+      <MapControls
+        ref={controlsRef}
         makeDefault
-        enablePan={false}
+        enableRotate={false}
         enableDamping
-        dampingFactor={0.075}
-        minDistance={isMobile ? 4.85 : 4.25}
-        maxDistance={isMobile ? 11 : 10}
-        rotateSpeed={isMobile ? 0.58 : 0.48}
-        zoomSpeed={0.68}
-        touches={{ ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_ROTATE }}
+        dampingFactor={isMobile ? 0.16 : 0.11}
+        screenSpacePanning
+        zoomToCursor
+        minDistance={isMobile ? 3.5 : 4.2}
+        maxDistance={isMobile ? 16 : 19}
+        panSpeed={isMobile ? 0.82 : 0.68}
+        zoomSpeed={isMobile ? 0.82 : 0.72}
+        mouseButtons={{ LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN }}
+        touches={{ ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_PAN }}
       />
       <FrameBudgetGuard quality={quality} onDecline={onQualityDecline} />
     </>
@@ -233,10 +236,9 @@ export function VikingScene(props: VikingSceneProps) {
   const [canvasKey, setCanvasKey] = useState(0);
   const webglSupported = useMemo(() => supportsWebGL2(), []);
 
-  const runtimeQuality =
-    props.renderQuality === 'auto'
-      ? leastDemandingQuality(requestedQuality, adaptiveQuality)
-      : requestedQuality;
+  const runtimeQuality = props.renderQuality === 'auto'
+    ? leastDemandingQuality(requestedQuality, adaptiveQuality)
+    : requestedQuality;
 
   const declineQuality = useCallback(() => {
     setAdaptiveQuality((current) => lowerQuality(current));
@@ -251,19 +253,20 @@ export function VikingScene(props: VikingSceneProps) {
   if (!webglSupported) return <SceneFallback reason="unsupported" />;
   if (contextLost) return <SceneFallback reason="context-lost" onRetry={retry} />;
 
-  const maxDpr = runtimeQuality === 'high' ? 1.8 : runtimeQuality === 'balanced' ? 1.3 : 1;
-  const minDpr = runtimeQuality === 'battery' ? 0.82 : 1;
+  const maxDpr = runtimeQuality === 'high' ? 1.65 : runtimeQuality === 'balanced' ? 1.25 : 1;
+  const minDpr = runtimeQuality === 'battery' ? 0.76 : 0.92;
   const dpr = THREE.MathUtils.clamp(profile.devicePixelRatio, minDpr, maxDpr);
 
   return (
     <Canvas
       key={canvasKey}
+      shadows={runtimeQuality !== 'battery' && !props.isMobile}
       dpr={dpr}
       camera={{
-        position: [0.8, props.isMobile ? 2.95 : 2.7, props.isMobile ? 8.2 : 7.4],
-        fov: props.isMobile ? 47 : 42,
-        near: 0.1,
-        far: 120,
+        position: [5.8, props.isMobile ? 4.3 : 5.7, props.isMobile ? 5.8 : 7.4],
+        fov: props.isMobile ? 44 : 38,
+        near: 0.08,
+        far: 80,
       }}
       gl={{
         antialias: runtimeQuality === 'high' && !props.isMobile,
@@ -275,9 +278,12 @@ export function VikingScene(props: VikingSceneProps) {
       }}
       onCreated={({ gl }) => {
         gl.toneMapping = THREE.ACESFilmicToneMapping;
-        gl.toneMappingExposure = 1.04;
+        gl.toneMappingExposure = runtimeQuality === 'battery' ? 1.1 : 1.18;
         gl.outputColorSpace = THREE.SRGBColorSpace;
         const canvas = gl.domElement;
+        canvas.style.touchAction = 'none';
+        canvas.style.overscrollBehavior = 'none';
+        canvas.addEventListener('contextmenu', (event) => event.preventDefault());
         canvas.addEventListener(
           'webglcontextlost',
           (event) => {
@@ -292,7 +298,6 @@ export function VikingScene(props: VikingSceneProps) {
         <SceneContent
           {...props}
           quality={runtimeQuality}
-          reducedMotion={profile.reducedMotion}
           onQualityDecline={declineQuality}
         />
       </Suspense>

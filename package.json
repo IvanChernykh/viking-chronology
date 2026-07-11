@@ -1,9 +1,9 @@
 {
   "name": "viking-chronology",
   "private": true,
-  "version": "1.0.0",
+  "version": "2.0.0",
   "type": "module",
-  "description": "Interactive 3D Viking expansion map built with Three.js, React Three Fiber and TypeScript.",
+  "description": "Historical flat-world 3D game chronology with progressive exploration, characters, Russian subtitles and evidence-led routes.",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "tsc -b && vite build",
