@@ -3,8 +3,10 @@ import {
   Compass,
   Headphones,
   Info,
+  Map,
   Menu,
   Network,
+  Users,
   ShieldCheck,
   Volume2,
   VolumeX,
@@ -12,13 +14,16 @@ import {
 } from 'lucide-react';
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { ControlPanel } from './components/ControlPanel';
+import { DialoguePanel } from './components/DialoguePanel';
 import { StoryPanel } from './components/StoryPanel';
 import { Timeline } from './components/Timeline';
 import { SceneErrorBoundary } from './components/SceneErrorBoundary';
+import type { VikingCharacter } from './data/dialogues';
 import { allStops, routes, timelineBounds } from './data/routes';
 import { useMediaQuery } from './hooks/useMediaQuery';
 import { useVikingAudio } from './hooks/useVikingAudio';
 import type { AudioScene } from './lib/audioEngine';
+import { canSpeakDialogue, speakReconstructedNorse, stopDialogueSpeech } from './lib/dialogueSpeech';
 import type { RenderQuality, VikingStop } from './types';
 
 const VikingScene = lazy(() =>
@@ -49,7 +54,7 @@ function App() {
   const isMobile = useMediaQuery('(max-width: 760px)');
   const isCoarsePointer = useMediaQuery('(pointer: coarse)');
   const [activeRouteId, setActiveRouteId] = useState('all');
-  const [timelineYear, setTimelineYear] = useState(timelineBounds.max);
+  const [timelineYear, setTimelineYear] = useState(timelineBounds.min);
   const [playing, setPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [shipSpeed, setShipSpeed] = useState(1);
@@ -57,6 +62,8 @@ function App() {
   const [renderQuality, setRenderQuality] = useState<RenderQuality>('auto');
   const [controlsOpen, setControlsOpen] = useState(false);
   const [selectedStop, setSelectedStop] = useState<VikingStop | null>(null);
+  const [activeCharacter, setActiveCharacter] = useState<VikingCharacter | null>(null);
+  const [dialogueIndex, setDialogueIndex] = useState(0);
   const [sceneResetKey, setSceneResetKey] = useState(0);
   const previousFrame = useRef<number | null>(null);
   const timelineAccumulator = useRef(0);
@@ -137,6 +144,8 @@ function App() {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setSelectedStop(null);
+        setActiveCharacter(null);
+        stopDialogueSpeech();
         setControlsOpen(false);
       }
     };
@@ -145,12 +154,37 @@ function App() {
   }, []);
 
   const handleSelectStop = (stop: VikingStop) => {
+    setActiveCharacter(null);
+    stopDialogueSpeech();
     setSelectedStop(stop);
     setTimelineYear((current) => Math.max(current, stop.year));
     setPlaying(false);
     setControlsOpen(false);
     audio.playSelection(stop.year + stop.name.length);
     if (isCoarsePointer && 'vibrate' in navigator) navigator.vibrate(12);
+  };
+
+
+  const handleSpeakCharacter = (character: VikingCharacter) => {
+    setSelectedStop(null);
+    setActiveCharacter(character);
+    setDialogueIndex(0);
+    setPlaying(false);
+    setControlsOpen(false);
+    speakReconstructedNorse(character.lines[0].oldNorse);
+    if (isCoarsePointer && 'vibrate' in navigator) navigator.vibrate(10);
+  };
+
+  const advanceDialogue = () => {
+    if (!activeCharacter) return;
+    const nextIndex = (dialogueIndex + 1) % activeCharacter.lines.length;
+    setDialogueIndex(nextIndex);
+    speakReconstructedNorse(activeCharacter.lines[nextIndex].oldNorse);
+  };
+
+  const closeDialogue = () => {
+    setActiveCharacter(null);
+    stopDialogueSpeech();
   };
 
   const handleRouteChange = (routeId: string) => {
@@ -182,7 +216,7 @@ function App() {
   };
 
   return (
-    <main className={`app-shell ${selectedStop ? 'app-shell--story-open' : ''}`}>
+    <main className={`app-shell ${selectedStop ? 'app-shell--story-open' : ''} ${activeCharacter ? 'app-shell--dialogue-open' : ''}`}>
       <div className="ornament ornament--top" aria-hidden="true">ᚠ ᚢ ᚦ ᚬ ᚱ ᚴ ᚼ ᚾ ᛁ ᛅ ᛋ ᛏ ᛒ ᛘ ᛚ ᛦ</div>
       <div className="scene-layer">
         <SceneErrorBoundary
@@ -193,8 +227,8 @@ function App() {
             fallback={
               <div className="scene-loading" role="status">
                 <span aria-hidden="true" />
-                <strong>Подготовка 3D-карты</strong>
-                <small>Загрузка геометрии и исторических маршрутов</small>
+                <strong>Подготовка 3D-мира</strong>
+                <small>Рельеф, поселение, персонажи и исторические маршруты</small>
               </div>
             }
           >
@@ -209,9 +243,17 @@ function App() {
               renderQuality={renderQuality}
               isMobile={isMobile}
               onSelectStop={handleSelectStop}
+              onSpeakCharacter={handleSpeakCharacter}
             />
           </Suspense>
         </SceneErrorBoundary>
+      </div>
+
+
+      <div className="world-mode-chip glass-panel" aria-label="Режим трёхмерного мира">
+        <Map size={15} />
+        <div><strong>Экспедиционная 3D-карта</strong><span>1 палец — перемещение · 2 пальца — масштаб</span></div>
+        <Users size={15} />
       </div>
 
       <header className="app-header">
@@ -289,8 +331,8 @@ function App() {
         <div>
           <strong>Историческая дисциплина</strong>
           <p>
-            Маршруты — доказательные коридоры, не GPS-треки одной флотилии. Спорные точки
-            маркируются уровнем уверенности; фэнтезийные элементы исключены.
+            Мир раскрывается по датам и источникам. Реплики персонажей — маркированная языковая реконструкция,
+            а маршруты проходят по поверхности воды и суши без «летающих» кораблей.
           </p>
         </div>
       </section>
@@ -300,6 +342,18 @@ function App() {
           <Headphones size={17} />
           <span><strong>Включить звуковую среду</strong><small>ветер, море, дерево и инструментальная реконструкция</small></span>
         </button>
+      )}
+
+
+      {activeCharacter && (
+        <DialoguePanel
+          character={activeCharacter}
+          lineIndex={dialogueIndex}
+          speechSupported={canSpeakDialogue()}
+          onSpeak={() => speakReconstructedNorse(activeCharacter.lines[dialogueIndex].oldNorse)}
+          onNext={advanceDialogue}
+          onClose={closeDialogue}
+        />
       )}
 
       {selectedStop && (
@@ -328,6 +382,7 @@ function App() {
           setTimelineYear(timelineBounds.min);
           setPlaying(false);
           setSelectedStop(null);
+          closeDialogue();
         }}
         onPlaybackSpeedChange={setPlaybackSpeed}
       />
