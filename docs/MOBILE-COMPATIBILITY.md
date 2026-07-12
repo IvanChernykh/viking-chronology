@@ -1,41 +1,64 @@
 # Мобильная совместимость
 
-## Главное изменение управления
+## Управление
 
-Сферическая камера и жест вращения удалены. Новая сцена использует `MapControls` с фиксированным боковым углом:
+Сцена не использует свободное вращение. `CameraControls` настроен как игровой боковой rig:
 
-- **один палец** — перемещение плоской карты;
-- **два пальца** — масштабирование и одновременный pan;
-- rotation отключён полностью;
-- `touch-action: none` и `overscroll-behavior: none` закреплены на Canvas;
-- информационные и диалоговые панели используют собственный вертикальный scroll.
+- один палец — `TOUCH_TRUCK`;
+- два пальца — `TOUCH_DOLLY_TRUCK`;
+- третий жест отключён;
+- polar/azimuth angles зафиксированы;
+- camera drag не вызывает browser scroll;
+- HTML HUD и карточки сохраняют `touch-action: pan-y`.
 
-Это устраняет основной конфликт, при котором мобильный браузер, OrbitControls и карточка одновременно пытались обработать один жест.
+Это устраняет прежнюю ситуацию, когда браузер, камера и карточка одновременно обрабатывали один touch.
 
-## Поддерживаемый способ запуска
+## Компоновка
 
-Предпочтительна опубликованная HTTPS-версия. Пока Pages не подтверждён успешным deployment, используйте локальный dev server или скачанный standalone. Встроенные просмотрщики ChatGPT, Telegram, GitHub и iOS Files могут отображать HTML как документ и блокировать JavaScript/WebGL.
+- Expedition HUD становится нижним sheet на узких экранах;
+- внутренние области имеют собственный vertical scroll;
+- используются `safe-area-inset-*`;
+- основные действия имеют touch targets не менее 44 px;
+- portrait и landscape имеют отдельные ограничения высоты;
+- voyage HUD занимает меньше экрана, чем planning HUD.
 
-## Целевые браузеры
+## GPU-политика
 
-- Safari на актуальных iOS/iPadOS;
-- Chrome и Firefox на актуальном Android;
-- Samsung Internet с WebGL 2.
+| Условие | Реакция |
+|---|---|
+| mobile device | ограничение DPR, выключение cinematic post-processing |
+| слабый CPU/RAM | старт в `battery` или `balanced` |
+| средний FPS ниже 31 | однонаправленное понижение качества |
+| context loss | fallback с повторным запуском в `battery` |
+| reduced motion | CSS-анимации сокращаются |
 
-## Защитные механизмы
+На mobile уменьшаются:
+
+- разрешение terrain geometry;
+- количество деревьев и скал;
+- детализация longship;
+- shadow map и динамические тени;
+- количество route points;
+- частота React commits прогресса.
+
+## Совместимость запуска
 
 - production target ES2018;
-- classic-IIFE standalone без module script;
-- fallback старого `MediaQueryList.addListener`;
-- stable DPR и профили `high`, `balanced`, `battery`;
-- WebGL diagnostics и recovery после `webglcontextlost`;
-- safe-area, portrait/landscape и touch-targets от 44 px;
-- mobile quality отключает дорогие тени и сокращает геометрию мира.
+- standalone — classic IIFE без module script;
+- legacy fallback для `MediaQueryList.addListener`;
+- service worker включается только по HTTPS;
+- Pages build использует относительные asset paths;
+- `404.html` копирует app shell для project Pages.
 
-## Диагностика
+## Проверка
 
-1. Открыть HTTPS-ссылку непосредственно в Safari или Chrome.
-2. Проверить, что Pages workflow завершён зелёным deployment job.
-3. Закрыть тяжёлые вкладки и отключить browser-level data saver.
-4. Выбрать профиль `battery`, если устройство теряет WebGL-контекст.
-5. Для проверки жестов начинать движение на свободной области мира, а не на HTML-панели.
+Автоматический verifier проверяет:
+
+- относительные production assets;
+- наличие manifest;
+- JS budget;
+- фиксированные camera control contracts;
+- наличие mobile `pan-y` для HTML-панелей;
+- отсутствие module script/import-meta/dynamic import в standalone.
+
+Физическая проверка iOS/Android всё ещё необходима перед объявлением полного device certification.

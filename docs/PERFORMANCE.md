@@ -1,23 +1,47 @@
 # Performance budget
 
-## Профили
+## Production snapshot
 
-| Profile | DPR | Тени | Мир |
+| Asset group | Raw | Gzip |
+|---|---:|---:|
+| CSS | ~39.8 KB | ~9.3 KB |
+| App UI | ~70.4 KB | ~22.9 KB |
+| VikingScene | ~42.5 KB | ~14.1 KB |
+| Geo data | ~109.3 KB | ~39.4 KB |
+| React vendor | ~196.0 KB | ~61.6 KB |
+| Three.js + postprocessing | ~1.14 MB | ~338.2 KB |
+
+Heavy WebGL code is loaded through the lazy `VikingScene` boundary after the initial React interface.
+
+## Render profiles
+
+| Profile | DPR | Shadows | Geometry/effects |
 |---|---:|---|---|
-| `high` | до 1.65 | 1536 shadow map | полная вода, рельеф, корабль и ContactShadows |
-| `balanced` | до 1.25 | 768 shadow map | средняя детализация |
-| `battery` | 0.76–1.0 | выключены | сокращённые деревья, вода, корабль и hit geometry |
+| `high` | до 1.70 | 2048 map | full terrain, decor and desktop post-processing |
+| `balanced` | до 1.28 | 1024 map | medium terrain/decor, no resolution oscillation |
+| `battery` | 0.72–0.96 | disabled | reduced terrain, trees, route points and ship details |
 
-## Mobile-first решения
+## Основные решения
 
-- фиксированная боковая камера не пересчитывает orientation при каждом touch;
-- MapControls обрабатывает pan/dolly без rotate;
-- fog-of-war выполняется одним shader plane;
-- картографическая текстура создаётся один раз и освобождается при unmount;
-- линии маршрутов используют 34 точки на compact и 64 на desktop;
-- React timeline commits ограничены примерно 11 обновлениями/сек. на mobile;
-- Three.js scene остаётся lazy chunk.
+- displaced terrain создаётся один раз через `useMemo`;
+- land mask и textures освобождаются при unmount;
+- леса и скалы используют instancing;
+- fog-of-war выполняется одним shader mesh;
+- water — один shader plane без дорогих screen-space reflections;
+- voyage progress интерполируется в Three.js, React commits throttled;
+- camera uses damped `setLookAt`, а не React state per frame;
+- ContactShadows рендерятся один раз и только desktop;
+- Bloom/SMAA/Vignette отключаются на mobile/battery;
+- quality guard может только понизить профиль и не вызывает DPR oscillation.
 
-## Quality guard
+## Проверки
 
-После пяти секунд измерения средний FPS ниже 31 переводит `high → balanced` или `balanced → battery`. Профиль не повышается автоматически, поэтому разрешение не пульсирует.
+`scripts/verify-production.mjs` проверяет:
+
+- относительные пути assets;
+- manifest и app shell;
+- raw JS budget менее 1.8 MB;
+- mobile camera actions;
+- прокрутку HTML-панелей.
+
+`scripts/verify-standalone.mjs` подтверждает classic-IIFE совместимость автономного HTML.

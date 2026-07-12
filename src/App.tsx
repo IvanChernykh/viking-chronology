@@ -15,10 +15,12 @@ import {
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { ControlPanel } from './components/ControlPanel';
 import { DialoguePanel } from './components/DialoguePanel';
+import { ExpeditionHUD, type ExpeditionPhase } from './components/ExpeditionHUD';
 import { StoryPanel } from './components/StoryPanel';
 import { Timeline } from './components/Timeline';
 import { SceneErrorBoundary } from './components/SceneErrorBoundary';
 import type { VikingCharacter } from './data/dialogues';
+import { expeditionChapters, initialSupplies, type ExpeditionId, type ExpeditionSupplies } from './data/expeditions';
 import { allStops, routes, timelineBounds } from './data/routes';
 import { useMediaQuery } from './hooks/useMediaQuery';
 import { useVikingAudio } from './hooks/useVikingAudio';
@@ -64,6 +66,11 @@ function App() {
   const [selectedStop, setSelectedStop] = useState<VikingStop | null>(null);
   const [activeCharacter, setActiveCharacter] = useState<VikingCharacter | null>(null);
   const [dialogueIndex, setDialogueIndex] = useState(0);
+  const [selectedExpeditionId, setSelectedExpeditionId] = useState<ExpeditionId>('western-europe');
+  const [expeditionPhase, setExpeditionPhase] = useState<ExpeditionPhase>('planning');
+  const [supplies, setSupplies] = useState<ExpeditionSupplies>(initialSupplies);
+  const [journeyProgress, setJourneyProgress] = useState(0);
+  const [spokenCharacterIds, setSpokenCharacterIds] = useState<Set<string>>(() => new Set());
   const [sceneResetKey, setSceneResetKey] = useState(0);
   const previousFrame = useRef<number | null>(null);
   const timelineAccumulator = useRef(0);
@@ -78,6 +85,11 @@ function App() {
   const selectedRoute = useMemo(
     () => displayRoutes.find((route) => route.stops.some((stop) => stop.id === selectedStop?.id)) ?? displayRoutes[0],
     [selectedStop],
+  );
+
+  const selectedExpedition = useMemo(
+    () => expeditionChapters.find((chapter) => chapter.id === selectedExpeditionId) ?? expeditionChapters[0],
+    [selectedExpeditionId],
   );
 
   const visibleStops = useMemo(
@@ -141,6 +153,37 @@ function App() {
   }, [isMobile, playing, playbackSpeed]);
 
   useEffect(() => {
+    if (expeditionPhase !== 'voyage') return;
+    let frameId = 0;
+    let previous: number | null = null;
+    let progress = journeyProgress;
+    let lastCommit = 0;
+    const durationSeconds = 42 / Math.max(0.65, shipSpeed);
+    const commitInterval = isMobile ? 80 : 42;
+    const animate = (timestamp: number) => {
+      if (previous === null) previous = timestamp;
+      const delta = document.hidden ? 0 : Math.min((timestamp - previous) / 1000, 0.08);
+      previous = timestamp;
+      progress = Math.min(1, progress + delta / durationSeconds);
+      if (timestamp - lastCommit >= commitInterval || progress >= 1) {
+        lastCommit = timestamp;
+        const year = selectedExpedition.departureYear + (selectedExpedition.arrivalYear - selectedExpedition.departureYear) * progress;
+        setJourneyProgress(progress);
+        setTimelineYear(year);
+        if (progress >= 1) {
+          setExpeditionPhase('arrived');
+          const route = displayRoutes.find((item) => item.id === selectedExpedition.routeId);
+          if (route) setSelectedStop(route.stops[route.stops.length - 1]);
+          return;
+        }
+      }
+      frameId = requestAnimationFrame(animate);
+    };
+    frameId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frameId);
+  }, [expeditionPhase, isMobile, journeyProgress, selectedExpedition, shipSpeed]);
+
+  useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setSelectedStop(null);
@@ -164,13 +207,17 @@ function App() {
     if (isCoarsePointer && 'vibrate' in navigator) navigator.vibrate(12);
   };
 
-
   const handleSpeakCharacter = (character: VikingCharacter) => {
     setSelectedStop(null);
     setActiveCharacter(character);
     setDialogueIndex(0);
     setPlaying(false);
     setControlsOpen(false);
+    setSpokenCharacterIds((current) => {
+      const next = new Set(current);
+      next.add(character.id);
+      return next;
+    });
     speakReconstructedNorse(character.lines[0].oldNorse);
     if (isCoarsePointer && 'vibrate' in navigator) navigator.vibrate(10);
   };
@@ -197,6 +244,46 @@ function App() {
         setSelectedStop(availableStops[availableStops.length - 1] ?? route.stops[0]);
       }
     }
+  };
+
+  const selectExpedition = (id: ExpeditionId) => {
+    if (expeditionPhase === 'voyage') return;
+    setSelectedExpeditionId(id);
+    setActiveRouteId(id);
+    const chapter = expeditionChapters.find((item) => item.id === id);
+    if (chapter) setTimelineYear(Math.max(timelineBounds.min, chapter.departureYear - 12));
+    setSelectedStop(null);
+    closeDialogue();
+  };
+
+  const supplyExpedition = (resource: keyof ExpeditionSupplies) => {
+    if (expeditionPhase !== 'planning') return;
+    setSupplies((current) => ({ ...current, [resource]: Math.min(100, current[resource] + 9) }));
+    audio.playSelection(resource.length * 11);
+    if (isCoarsePointer && 'vibrate' in navigator) navigator.vibrate(8);
+  };
+
+  const launchExpedition = () => {
+    const requirementsMet = Object.entries(selectedExpedition.requirements).every(
+      ([key, value]) => supplies[key as keyof ExpeditionSupplies] >= value,
+    );
+    if (!requirementsMet || spokenCharacterIds.size < 2) return;
+    setSelectedStop(null);
+    closeDialogue();
+    setPlaying(false);
+    setActiveRouteId(selectedExpedition.routeId);
+    setTimelineYear(selectedExpedition.departureYear);
+    setJourneyProgress(0);
+    setExpeditionPhase('voyage');
+    if (!audio.enabled) void audio.toggle();
+  };
+
+  const returnToVillage = () => {
+    setExpeditionPhase('planning');
+    setJourneyProgress(0);
+    setTimelineYear(timelineBounds.min);
+    setSelectedStop(null);
+    setActiveRouteId('all');
   };
 
   const navigateStory = (direction: -1 | 1) => {
@@ -242,6 +329,8 @@ function App() {
               shipSpeed={shipSpeed}
               renderQuality={renderQuality}
               isMobile={isMobile}
+              journeyRouteId={expeditionPhase === 'voyage' || expeditionPhase === 'arrived' ? selectedExpedition.routeId : null}
+              journeyProgress={journeyProgress}
               onSelectStop={handleSelectStop}
               onSpeakCharacter={handleSpeakCharacter}
             />
@@ -249,10 +338,9 @@ function App() {
         </SceneErrorBoundary>
       </div>
 
-
       <div className="world-mode-chip glass-panel" aria-label="Режим трёхмерного мира">
         <Map size={15} />
-        <div><strong>Экспедиционная 3D-карта</strong><span>1 палец — перемещение · 2 пальца — масштаб</span></div>
+        <div><strong>Живая историческая экспедиция</strong><span>перетащите мир · сведите пальцы для масштаба</span></div>
         <Users size={15} />
       </div>
 
@@ -299,6 +387,18 @@ function App() {
         />
       )}
 
+      <ExpeditionHUD
+        selectedId={selectedExpeditionId}
+        supplies={supplies}
+        phase={expeditionPhase}
+        progress={journeyProgress}
+        spokenCharacters={spokenCharacterIds.size}
+        onSelect={selectExpedition}
+        onSupply={supplyExpedition}
+        onLaunch={launchExpedition}
+        onReturn={returnToVillage}
+      />
+
       <div className={`control-panel-wrap ${controlsOpen ? 'control-panel-wrap--open' : ''}`}>
         <ControlPanel
           routes={displayRoutes}
@@ -326,7 +426,7 @@ function App() {
         />
       </div>
 
-      <section className="method-note glass-panel">
+      <section className={`method-note glass-panel ${expeditionPhase !== 'planning' ? 'method-note--hidden' : ''}`}>
         <ShieldCheck size={17} />
         <div>
           <strong>Историческая дисциплина</strong>
@@ -343,7 +443,6 @@ function App() {
           <span><strong>Включить звуковую среду</strong><small>ветер, море, дерево и инструментальная реконструкция</small></span>
         </button>
       )}
-
 
       {activeCharacter && (
         <DialoguePanel
@@ -374,6 +473,7 @@ function App() {
         playing={playing}
         playbackSpeed={playbackSpeed}
         onYearChange={(year) => {
+          if (expeditionPhase === 'voyage') return;
           setTimelineYear(year);
           setPlaying(false);
         }}
@@ -382,6 +482,8 @@ function App() {
           setTimelineYear(timelineBounds.min);
           setPlaying(false);
           setSelectedStop(null);
+          setExpeditionPhase('planning');
+          setJourneyProgress(0);
           closeDialogue();
         }}
         onPlaybackSpeedChange={setPlaybackSpeed}

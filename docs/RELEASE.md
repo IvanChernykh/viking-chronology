@@ -1,34 +1,44 @@
 # Viking Chronology — release notes
 
-## 2.0.0 — Flat World vertical slice
+## 3.0.0 — Expedition quality release
 
-### Мир
+### Игровой цикл
 
-- глобус и воздушные дуги полностью удалены;
-- добавлена плоская физическая 3D-карта с боковой камерой;
-- shader fog-of-war открывает территории по хронологии;
-- добавлены поселения, рельеф, леса и скандинавский стартовый лагерь;
-- корабли движутся вдоль поверхности воды по Catmull–Rom curves.
+- добавлены три экспедиционные главы;
+- добавлены ресурсы: провизия, древесина и парусина;
+- запуск требует подготовки и разговоров с командой;
+- добавлены фазы `planning`, `ready`, `voyage`, `arrived`;
+- прогресс путешествия синхронизирован с годом и финальной точкой.
 
-### Gameplay
+### Мир и графика
 
-- три интерактивных персонажа;
-- реконструированные древнескандинавские реплики;
-- русские субтитры;
-- browser TTS с приоритетом исландского голоса;
-- выбор исторических точек и доказательная карточка сохранены.
+- плоская текстурная карта заменена displaced terrain geometry;
+- добавлены land mask, simplex-noise и mountain envelopes;
+- вода получила отдельный shader с волнами, мелководьем и пеной;
+- fog-of-war получил анимированный procedural noise;
+- добавлены instanced forests, rocks и revealed settlements;
+- longship и персонажи переработаны в более детальные процедурные модели;
+- desktop получил SMAA, сдержанный bloom, vignette и ACES tone mapping.
 
-### Mobile
+### Камера и mobile
 
-- OrbitControls заменены на MapControls;
-- один палец перемещает мир, два масштабируют;
-- rotation выключен;
-- уменьшены DPR, тени, геометрия и объекты на compact profile;
-- Canvas изолирован от overscroll браузера.
+- `MapControls` заменён на `CameraControls`;
+- камера стала фиксированным постановочным rig;
+- один палец выполняет truck, два — dolly + truck;
+- камера автоматически следует за активной экспедицией;
+- HTML HUD отделён от жестов Canvas;
+- mobile отключает дорогие эффекты и сокращает geometry budget.
 
-### Repository presentation
+### PWA и Pages
 
-- прежние схематические globe-preview удалены;
-- README больше не выдаёт нарисованные макеты за реальные снимки игры;
-- новые визуалы будут добавляться только после подтверждённого рендера приложения;
-- неработающий Pages URL больше не маркируется как подтверждённый live launch.
+- добавлена HTTPS-only регистрация service worker;
+- Pages build создаёт `.nojekyll`, `404.html` и `version.txt`;
+- workflow публикует официальный artifact и fallback `gh-pages` branch;
+- после deployment выполняется реальная HTTP-проверка публичного URL;
+- release считается успешным только при HTTP 200 и найденной сигнатуре приложения.
+
+### Quality gate
+
+- добавлен production verifier;
+- CI использует locked `npm ci`;
+- полный `npm run check` включает lint, strict TypeScript, production build, production verification, standalone build и standalone verification.
