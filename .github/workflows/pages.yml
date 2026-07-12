@@ -24,22 +24,27 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      - name: Install locked dependencies
-        run: npm ci
+
+      - name: Install dependencies
+        run: npm install
+
       - name: Full quality gate
         run: npm run check
+
       - name: Prepare project Pages shell
         run: |
           touch dist/.nojekyll
           cp dist/index.html dist/404.html
           printf '%s\n' "${GITHUB_SHA}" > dist/version.txt
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
