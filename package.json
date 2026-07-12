@@ -1,9 +1,9 @@
 {
   "name": "viking-chronology",
   "private": true,
-  "version": "2.0.0",
+  "version": "3.0.0",
   "type": "module",
-  "description": "Historical flat-world 3D game chronology with progressive exploration, characters, Russian subtitles and evidence-led routes.",
+  "description": "Historical 3D expedition game with procedural terrain, cinematic camera, voyage chapters, characters, Russian subtitles and evidence-led chronology.",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "tsc -b && vite build",
@@ -11,15 +11,19 @@
     "lint": "eslint .",
     "preview": "vite preview --host 0.0.0.0",
     "standalone": "vite build --config vite.standalone.config.ts && node scripts/make-standalone.mjs",
-    "check": "npm run lint && npm run typecheck && npm run build && npm run standalone && npm run verify:standalone",
-    "verify:standalone": "node scripts/verify-standalone.mjs"
+    "check": "npm run lint && npm run typecheck && npm run build && npm run verify:production && npm run standalone && npm run verify:standalone",
+    "verify:standalone": "node scripts/verify-standalone.mjs",
+    "verify:production": "node scripts/verify-production.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",
+    "@react-three/postprocessing": "^3.0.4",
     "lucide-react": "^1.24.0",
+    "postprocessing": "^6.39.2",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
+    "simplex-noise": "^4.0.3",
     "three": "^0.185.1",
     "topojson-client": "^3.1.0",
     "world-atlas": "^2.0.2"

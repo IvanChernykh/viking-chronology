@@ -10,6 +10,9 @@ permissions:
   pages: write
   id-token: write
 
+env:
+  SITE_URL: https://ivanchernykh.github.io/viking-chronology/
+
 concurrency:
   group: pages
   cancel-in-progress: true
@@ -17,40 +20,59 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build production atlas
-        run: npm run build
-
-      # GitHub requires the repository owner to select "GitHub Actions"
-      # once in Settings → Pages before configure-pages can resolve the site.
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Full quality gate
+        run: npm run check
+      - name: Prepare project Pages shell
+        run: |
+          touch dist/.nojekyll
+          cp dist/index.html dist/404.html
+          printf '%s\n' "${GITHUB_SHA}" > dist/version.txt
       - name: Configure Pages
         uses: actions/configure-pages@v5
-
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: dist
 
   deploy:
+    needs: build
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
-      - name: Deploy to GitHub Pages
+      - name: Deploy production game
         id: deployment
         uses: actions/deploy-pages@v4
+
+  verify-live-site:
+    needs: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Verify public HTTP response and release commit
+        run: |
+          for attempt in 1 2 3 4 5 6; do
+            status=$(curl --location --silent --output /tmp/site.html --write-out "%{http_code}" "${SITE_URL}?sha=${GITHUB_SHA}")
+            marker=$(curl --location --silent "${SITE_URL}version.txt?sha=${GITHUB_SHA}" || true)
+            echo "Attempt ${attempt}: HTTP ${status}; marker ${marker}"
+            if [ "${status}" = "200" ] && grep -q "Viking Chronology\|Пути северных мореходов" /tmp/site.html && [ "${marker}" = "${GITHUB_SHA}" ]; then
+              echo "Verified ${SITE_URL} at ${GITHUB_SHA}"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "GitHub Pages did not return the expected production release."
+          exit 1

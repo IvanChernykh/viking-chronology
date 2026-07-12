@@ -2,23 +2,21 @@
 
 # ᚠ VIKING CHRONOLOGY ᚱ
 
-### Хроника северных путей · исторический 3D-мир · 750–1021
+### Историческая 3D-игра об экспедициях северян · 750–1021
 
-**Плоская экспедиционная карта · боковая камера · fog of war · персонажи · древнескандинавская реконструкция · русские субтитры**
+**Фьорд и поселение · подготовка команды · три исторические главы · кинематографическая камера · русские субтитры · доказательная хронология**
 
 </div>
 
----
-
 <p align="center">
-  <a href="#запуск">
-    <img alt="Run locally" src="https://img.shields.io/badge/RUN_LOCALLY-D4B36C?style=for-the-badge&logo=vite&logoColor=17110C" />
-  </a>
   <a href="https://github.com/IvanChernykh/viking-chronology/actions/workflows/ci.yml">
-    <img alt="CI" src="https://img.shields.io/github/actions/workflow/status/IvanChernykh/viking-chronology/ci.yml?branch=main&style=for-the-badge&label=QUALITY_GATE" />
+    <img alt="Quality gate" src="https://img.shields.io/github/actions/workflow/status/IvanChernykh/viking-chronology/ci.yml?branch=main&style=for-the-badge&label=QUALITY_GATE" />
   </a>
   <a href="https://github.com/IvanChernykh/viking-chronology/actions/workflows/pages.yml">
-    <img alt="Pages workflow" src="https://img.shields.io/github/actions/workflow/status/IvanChernykh/viking-chronology/pages.yml?branch=main&style=for-the-badge&label=PAGES_WORKFLOW" />
+    <img alt="Pages release" src="https://img.shields.io/github/actions/workflow/status/IvanChernykh/viking-chronology/pages.yml?branch=main&style=for-the-badge&label=PAGES_RELEASE" />
+  </a>
+  <a href="#локальный-запуск">
+    <img alt="Run locally" src="https://img.shields.io/badge/RUN_LOCALLY-D4B36C?style=for-the-badge&logo=vite&logoColor=17110C" />
   </a>
 </p>
 
@@ -27,203 +25,232 @@
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat-square&logo=typescript&logoColor=white" />
   <img alt="Three.js" src="https://img.shields.io/badge/Three.js-r185-111111?style=flat-square&logo=threedotjs&logoColor=white" />
   <img alt="WebGL" src="https://img.shields.io/badge/WebGL-2.0-990000?style=flat-square&logo=webgl&logoColor=white" />
-  <img alt="License" src="https://img.shields.io/badge/License-MIT-6F8D77?style=flat-square" />
-</p>
-
-<h1 align="center">Viking Chronology</h1>
-<p align="center"><strong>Историческая 3D-игра-хронология · VIII–XI века</strong></p>
-<p align="center">
-  Плоский экспедиционный мир, открывающийся по мере путешествий, с персонажами,
-  реконструированной речью, русскими субтитрами и проверяемой доказательной базой.
-</p>
-
-<p align="center">
-  <a href="#игровой-вертикальный-срез"><strong>Gameplay</strong></a>
-  ·
-  <a href="#историческая-и-языковая-дисциплина">Историчность</a>
-  ·
-  <a href="#мобильное-управление">Mobile</a>
-  ·
-  <a href="#архитектура">Архитектура</a>
-  ·
-  <a href="#запуск">Запуск</a>
+  <img alt="Version" src="https://img.shields.io/badge/release-3.0.0-6F8D77?style=flat-square" />
+  <img alt="License" src="https://img.shields.io/badge/license-MIT-6F8D77?style=flat-square" />
 </p>
 
 > [!IMPORTANT]
-> Кнопка публичного запуска не показывается как рабочая, пока GitHub Pages не завершит реальный deployment. Сейчас гарантированный вариант — запустить проект локально; standalone генерируется командой `npm run standalone`. Workflow Pages уже настроен и запускается при каждом push в `main`.
+> Публичная ссылка появится в этом README только после того, как release workflow сам получит от сайта HTTP 200 и найдёт сигнатуру приложения. Наличие YAML-файла или успешной сборки больше не считается доказательством работающего Pages.
 
 ---
 
 <table>
 <tr>
-<td align="center" width="20%"><strong>750–1021</strong><br/><sub>хронология</sub></td>
+<td align="center" width="20%"><strong>3</strong><br/><sub>экспедиционные главы</sub></td>
 <td align="center" width="20%"><strong>19</strong><br/><sub>исторических локаций</sub></td>
-<td align="center" width="20%"><strong>3</strong><br/><sub>маршрутных коридора</sub></td>
-<td align="center" width="20%"><strong>3</strong><br/><sub>интерактивных персонажа</sub></td>
+<td align="center" width="20%"><strong>3</strong><br/><sub>члена команды</sub></td>
+<td align="center" width="20%"><strong>750–1021</strong><br/><sub>хронология</sub></td>
 <td align="center" width="20%"><strong>3</strong><br/><sub>GPU-профиля</sub></td>
 </tr>
 </table>
 
-## Игровой вертикальный срез
+## Версия 3.0: Expedition vertical slice
 
-Проект больше не использует глобус. Игровое пространство представляет собой **плоский 3D-мир**, показанный с низкой боковой камеры. В 750 году игрок видит Скандинавию и поселение; остальные территории скрыты туманом неизвестности. Хронология, маршруты и посещённые точки постепенно раскрывают Атлантику, Западную Европу, речные системы Востока и Северную Америку.
+Viking Chronology больше не является интерактивным глобусом. Игрок начинает в скандинавском поселении, выбирает историческую главу, разговаривает с командой, комплектует корабль и запускает экспедицию. Камера следует за судном по поверхности воды, а хронология и неизвестные территории раскрываются вместе с путешествием.
 
 <table>
 <tr>
 <td width="33%" valign="top">
 
-### Исследование мира
+### 1. Совет экспедиции
 
-- один палец или левая кнопка — перемещение карты;
-- два пальца или колесо — масштаб;
-- угол камеры фиксирован и не ломается жестами;
-- автовращение отсутствует;
-- выбор точки переводит камеру к месту события.
-
-</td>
-<td width="33%" valign="top">
-
-### Живая хроника
-
-- маршруты проявляются по историческому времени;
-- fog-of-war открывает только известные игроку области;
-- корабли движутся вдоль поверхности воды;
-- поселения, леса и горный рельеф появляются вместе с расширением мира.
+- выбор одной из трёх глав;
+- историческая цель и границы реконструкции;
+- размер команды и уровень риска;
+- требования к провизии, древесине и парусине;
+- обязательные разговоры минимум с двумя членами команды.
 
 </td>
 <td width="33%" valign="top">
 
-### Персонажи
+### 2. Выход из фьорда
 
-- кормчая Рагнхильд;
-- корабельный мастер Кетиль;
-- скальд Аса;
-- древнескандинавские реплики;
-- русские субтитры и контекст реконструкции.
+- детализированный процедурный длинный корабль;
+- наземно-морская `CatmullRomCurve3` без воздушных дуг;
+- плавная ориентация корпуса и анимация паруса;
+- постановочная боковая камера;
+- прогресс путешествия и синхронная хронология.
+
+</td>
+<td width="33%" valign="top">
+
+### 3. Исторический результат
+
+- открытие доступных территорий и поселений;
+- карточки дат, свидетельств и уверенности;
+- русские субтитры для реплик;
+- маркировка реконструированного материала;
+- возврат в поселение и выбор следующей главы.
 
 </td>
 </tr>
 </table>
 
-## Что изменилось после глобуса
+## Три главы
 
-| Было | Стало |
-|---|---|
-| Сферическая карта и высокие дуги | Плоский мир с маршрутами на поверхности |
-| Корабли визуально «летали» | Корабль следует наземной `CatmullRomCurve3` на уровне воды |
-| Вращение двумя жестами конфликтовало с UI | `MapControls`: один палец — pan, два — dolly/pan, rotation отключён |
-| Сразу виден весь мир | Shader fog-of-war с раскрытием по годам и остановкам |
-| Только точки и карточки | Поселение, здания, деревья, рельеф и интерактивные NPC |
-| Только процедурная среда | Музыка, ambience и браузерная озвучка диалогов |
+| Глава | Период | Игровая рамка | Риск |
+|---|---:|---|---|
+| **Западный берег** | 793–866 | Скандинавия → Британские острова | высокий |
+| **Речной путь** | 860–907 | Балтика → речные системы Восточной Европы | умеренный |
+| **Северная Атлантика** | 874–1021 | Исландия → Гренландия → североамериканский горизонт | крайний |
+
+Главы представляют многолетние исторические коридоры. Они не изображаются как одно документированное плавание одной команды.
 
 ## Визуальная система
 
-- стилизованный физический стол-карта с объёмным основанием;
-- картографическая текстура из открытых данных `world-atlas`;
-- процедурная вода с лёгкой волной;
-- направленный свет, туман, тени и адаптивный quality budget;
-- низкополигональные здания, хвойные леса, горы, персонажи и длинный корабль;
-- маршруты без вертикальных арок и телепортации между сегментами.
+### Мир
 
-## Историческая и языковая дисциплина
+- реальная displaced-геометрия рельефа, а не текстурированная плоскость;
+- маска суши из открытых геоданных `world-atlas`;
+- simplex-noise для локального микрорельефа;
+- горные огибающие, береговой слой и объёмное основание мира;
+- instanced-леса, скалы и поселения, раскрывающиеся по времени.
 
-Маршруты остаются **многолетними историческими коридорами**, а не GPS-треком одной флотилии. Каждая точка содержит датировку, современную географию, контекст, основание реконструкции, уровень уверенности и институциональные источники.
+### Вода и атмосфера
 
-Реплики персонажей используют нормализованную древнескандинавскую орфографию, но являются специально написанными учебными реконструкциями. Они **не выдаются за дословные цитаты эпохи**. Браузер выбирает ближайший доступный исландский или северогерманский TTS-голос; такое произношение является приближением, а не достоверной записью речи IX века.
+- отдельный water shader с волнами, мелководьем и береговой пеной;
+- анимированный fog-of-war с мягкими зонами раскрытия;
+- атмосферный туман и физически согласованная цветовая перспектива;
+- ACES filmic tone mapping;
+- desktop post-processing: SMAA, контролируемый bloom и vignette.
 
-Подробности: [`docs/HISTORICAL-METHODOLOGY.md`](docs/HISTORICAL-METHODOLOGY.md)
+### Люди и поселение
 
-## Мобильное управление
+- стартовый фьорд **Хавнфьорд**;
+- длинный дом, мастерская, причал, костёр и реквизит;
+- три интерактивных персонажа с отдельными силуэтами и idle-анимацией;
+- процедурный longship с корпусом, палубой, щитами, вёслами и парусом.
 
-Главная цель новой сцены — устранить застревание и борьбу жестов с камерой:
+## Камера и мобильное управление
 
-- rotation полностью отключён;
-- один touch всегда перемещает карту;
-- два touch выполняют масштабирование и pan;
-- Canvas использует `touch-action: none` и `overscroll-behavior: none`;
-- HTML-карточки сохраняют собственный `touch-action: pan-y`;
-- mobile DPR ограничен, тени и детализация уменьшаются по device profile;
-- крупные невидимые hit-зоны остаются вокруг точек и персонажей;
-- диалог и историческая карточка не закрываются случайным касанием мира.
+Свободное вращение исключено. Камера работает как режиссёрский игровой rig, а не универсальный 3D-viewer.
+
+| Жест | Результат |
+|---|---|
+| один палец | перемещение мира без вращения |
+| два пальца | масштабирование и pan |
+| касание персонажа/точки | выбор объекта без конфликта с камерой |
+| запуск главы | автоматический переход в voyage camera |
+| завершение пути | фокус на финальной исторической точке |
+
+Технически используется `CameraControls` с фиксированными polar/azimuth limits, `TOUCH_TRUCK` и `TOUCH_DOLLY_TRUCK`. HTML-панели сохраняют собственную прокрутку `pan-y`, а Canvas изолирован от browser overscroll.
 
 Подробная матрица: [`docs/MOBILE-COMPATIBILITY.md`](docs/MOBILE-COMPATIBILITY.md)
 
-## Звук и озвучка
+## Персонажи, речь и субтитры
 
-| Слой | Реализация |
+| Персонаж | Роль |
 |---|---|
-| Окружение | море, ветер, река, дерево и вёсла через Web Audio API |
-| Музыка | процедурный дрон, рог и щипковые тембры |
-| Диалоги | `SpeechSynthesisUtterance` с приоритетом `is-IS`, затем других северогерманских голосов |
-| Субтитры | русская строка всегда показывается независимо от наличия TTS |
-| Безопасность | воспроизведение запускается только после действия пользователя |
+| **Рагнхильд** | кормчая, навигация и решение о выходе |
+| **Кетиль** | корабельный мастер и состояние судна |
+| **Аса** | скальд и контекст памяти/устной традиции |
+
+Реплики используют нормализованную древнескандинавскую орфографию и являются специально написанными реконструкциями. Русский перевод всегда выводится текстом. Browser TTS — только доступный фонетический fallback; он не объявляется аутентичной речью IX века.
+
+Методология: [`docs/HISTORICAL-METHODOLOGY.md`](docs/HISTORICAL-METHODOLOGY.md)
 
 ## Архитектура
 
-<p align="center">
-  <img src="docs/architecture-map.svg" alt="Viking Chronology architecture" width="100%" />
-</p>
+```mermaid
+flowchart LR
+    UI[React game state] --> EXP[Expedition system]
+    EXP --> TIME[Chronology]
+    EXP --> CAM[Cinematic camera rig]
+    TIME --> FOG[Exploration fog]
+    TIME --> ROUTES[Surface routes]
+    TIME --> WORLD[Settlements and decor]
+    CAM --> R3F[React Three Fiber]
+    ROUTES --> R3F
+    FOG --> R3F
+    WORLD --> R3F
+    R3F --> WEBGL[Three.js / WebGL 2]
+    UI --> AUDIO[Web Audio + optional TTS]
+    BUILD[Vite production pipeline] --> VERIFY[Production and standalone verifiers]
+    VERIFY --> PAGES[GitHub Pages release + HTTP probe]
+```
 
 ```text
 src/
 ├── components/
-│   ├── VikingScene.tsx        # Canvas, side camera, MapControls, quality guard
-│   ├── MapSurface.tsx         # physical map table and procedural water
-│   ├── ExplorationFog.tsx     # chronological shader fog-of-war
-│   ├── GroundRoute.tsx        # surface routes and longship animation
-│   ├── WorldStopMarker.tsx    # touch-safe historical points
-│   ├── VikingCamp.tsx         # Scandinavian settlement and characters
-│   ├── WorldDecor.tsx         # terrain, forests and revealed settlements
-│   ├── DialoguePanel.tsx      # Old Norse line, Russian subtitle, voice controls
-│   ├── StoryPanel.tsx         # evidence, narrative and sources
-│   └── Timeline.tsx           # chronological progression
+│   ├── ExpeditionHUD.tsx      # главы, ресурсы, readiness и voyage progress
+│   ├── VikingScene.tsx        # Canvas, camera rig, lighting, quality guard
+│   ├── MapSurface.tsx         # displaced terrain и water shader
+│   ├── ExplorationFog.tsx     # animated fog-of-war
+│   ├── GroundRoute.tsx        # поверхность маршрута и движение корабля
+│   ├── LongshipModel.tsx      # модель корабля
+│   ├── VikingCamp.tsx         # поселение и игровые объекты
+│   ├── VikingActor.tsx        # персонажи и интерактивные hit areas
+│   └── DialoguePanel.tsx      # древнескандинавская строка и русский перевод
 ├── data/
-│   ├── routes.ts              # 19 locations and source model
-│   └── dialogues.ts           # reconstructed character dialogue
+│   ├── expeditions.ts         # три игровые главы и требования
+│   ├── routes.ts              # локации, даты и источники
+│   └── dialogues.ts           # реконструированные диалоги
 ├── lib/
-│   ├── flatMap.ts             # projection, map texture and ground curves
-│   ├── dialogueSpeech.ts      # browser TTS selection and playback
-│   ├── audioEngine.ts         # procedural music and ambience
-│   └── deviceProfile.ts       # adaptive quality policy
-└── styles/                    # responsive game HUD and mobile panels
+│   ├── flatMap.ts             # проекция, land mask, рельеф и ground curves
+│   ├── audioEngine.ts         # процедурная музыка и ambience
+│   ├── dialogueSpeech.ts      # необязательный browser TTS
+│   └── deviceProfile.ts       # high / balanced / battery
+└── styles/                    # responsive HUD, panels и mobile sheets
 ```
 
-Полное описание: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+Полный документ: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 
-## Производительность
+## Quality gate
 
-- ES2018 production target;
-- lazy-loaded Three.js scene;
-- stable DPR instead of continuous resolution oscillation;
-- `high`, `balanced`, `battery` profiles;
-- one-way quality downgrade after sustained low FPS;
-- reduced terrain, shadows, trees and ship detail on mobile;
-- throttled React timeline commits;
-- classic IIFE standalone without module script.
+`npm run check` выполняет:
 
-Подробности: [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md)
+```text
+ESLint
+strict TypeScript build
+production Vite build
+production asset/path/mobile-contract verifier
+standalone classic-IIFE build
+standalone compatibility verifier
+```
 
-## Запуск
+Текущий production budget:
+
+| Слой | Размер gzip |
+|---|---:|
+| CSS | ~9.3 KB |
+| игровой UI | ~22.9 KB |
+| VikingScene | ~14.1 KB |
+| React vendor | ~61.6 KB |
+| Three.js + postprocessing | ~338.2 KB |
+
+Three.js загружается лениво после UI. На мобильных устройствах отключаются post-processing и дорогие тени, уменьшаются DPR, рельеф, деревья и детализация объектов.
+
+Подробнее: [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md)
+
+## GitHub Pages release
+
+Release workflow не ограничивается сборкой:
+
+1. выполняет полный `npm run check`;
+2. добавляет `.nojekyll`, `404.html` и commit marker;
+3. загружает официальный Pages artifact;
+4. запускает официальный `actions/deploy-pages`;
+5. делает повторные HTTP-запросы к публичному URL;
+6. сравнивает `version.txt` с SHA release-коммита;
+7. завершает workflow ошибкой, если сайт не отдаёт HTTP 200 с нужной версией приложения.
+
+Публичная launch-кнопка добавляется только после фактической проверки этого этапа.
+
+## Локальный запуск
 
 Требования: **Node.js 22+**.
 
 ```bash
 git clone https://github.com/IvanChernykh/viking-chronology.git
 cd viking-chronology
-npm install
+npm ci
 npm run dev
 ```
 
-Полная проверка:
+Проверка и production:
 
 ```bash
 npm run check
-```
-
-Production:
-
-```bash
-npm run build
 npm run preview
 ```
 
@@ -235,34 +262,10 @@ npm run standalone
 
 Результат: `viking-chronology-standalone.html`.
 
-## GitHub Pages
-
-`.github/workflows/pages.yml` выполняет build, создаёт Pages artifact и deploy в окружение `github-pages` при каждом push в `main`. В репозитории также находится `public/.nojekyll`, а Vite использует относительный base path.
-
-Для нового репозитория владелец должен выбрать **Settings → Pages → Source → GitHub Actions**. После выбора следующий push в `main` запускает deployment. До получения успешного deployment и реального HTTP-ответа README не объявляет Pages-сайт рабочим.
-
-## Следующий масштабный этап
-
-Текущая версия — проверяемый игровой vertical slice. Следующий production-этап требует отдельных наборов ассетов и исторической редакции:
-
-- полноценные персонажные модели, анимации лица и motion capture;
-- профессиональные актёры и консультация специалиста по древнескандинавскому;
-- главы, задания, экономика путешествия и решения игрока;
-- погодные системы, смена времени суток и мореходная навигация;
-- дополнительные языки Британских островов, Восточной Европы и Византии;
-- сохранения, accessibility settings и device lab на реальных iOS/Android устройствах.
-
 ## Документация
 
 [Architecture](docs/ARCHITECTURE.md) · [Historical methodology](docs/HISTORICAL-METHODOLOGY.md) · [Mobile compatibility](docs/MOBILE-COMPATIBILITY.md) · [Performance](docs/PERFORMANCE.md) · [Release notes](docs/RELEASE.md) · [Security](SECURITY.md)
 
 ## License
 
-Код распространяется по лицензии [MIT](LICENSE). Исторические источники и внешние материалы принадлежат соответствующим правообладателям.
-
----
-
-<p align="center">
-  <strong>Evidence-led historical game world.</strong><br/>
-  <sub>Не фэнтезийный глобус. Не летающие корабли. Хронология, мир и источники.</sub>
-</p>
+MIT © 2026
