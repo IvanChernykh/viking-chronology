@@ -120,3 +120,39 @@ jobs:
           done
           echo "Pages did not return the expected release."
           exit 1
+
+  report-release:
+    if: always()
+    needs: [build, enable-pages, deploy, verify-live-site]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Publish machine-readable release status
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BUILD_RESULT: ${{ needs.build.result }}
+          ENABLE_RESULT: ${{ needs.enable-pages.result }}
+          DEPLOY_RESULT: ${{ needs.deploy.result }}
+          VERIFY_RESULT: ${{ needs.verify-live-site.result }}
+        run: |
+          mkdir -p /tmp/pages-status
+          cd /tmp/pages-status
+          git init
+          git checkout -b pages-status
+          cat > status.json <<EOF
+          {
+            "sha": "${GITHUB_SHA}",
+            "build": "${BUILD_RESULT}",
+            "enablePages": "${ENABLE_RESULT}",
+            "deploy": "${DEPLOY_RESULT}",
+            "verify": "${VERIFY_RESULT}",
+            "runId": "${GITHUB_RUN_ID}",
+            "site": "${SITE_URL}"
+          }
+          EOF
+          printf '%s\n' "${GITHUB_SHA}" > version.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add status.json version.txt
+          git commit -m "Report Pages release ${GITHUB_SHA}"
+          git push --force "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" pages-status:pages-status
