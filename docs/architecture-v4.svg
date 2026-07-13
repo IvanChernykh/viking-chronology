@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="580" viewBox="0 0 1400 580" role="img" aria-labelledby="title desc">
+  <title id="title">Архитектура Viking Chronology 4</title>
+  <desc id="desc">Связь игрового состояния, исторических данных, WebGL сцены, аудио и pipeline публикации</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#071416"/><stop offset="1" stop-color="#120e0b"/></linearGradient>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0l8 4-8 4z" fill="#9f8148"/></marker>
+  </defs>
+  <rect width="1400" height="580" rx="28" fill="url(#bg)"/>
+  <text x="60" y="54" fill="#e6d09a" font-family="Georgia" font-size="30">Production architecture</text>
+  <text x="60" y="81" fill="#73877c" font-family="Arial" font-size="12" letter-spacing="2">REACT STATE · HISTORICAL DATA · R3F / THREE.JS · AUDIO · RELEASE VERIFICATION</text>
+  <g font-family="Arial">
+    <g transform="translate(60 130)"><rect width="270" height="150" rx="16" fill="#0c211f" stroke="#6f8d77" stroke-opacity=".42"/><text x="24" y="38" fill="#d9c99f" font-size="20">Game state</text><text x="24" y="70" fill="#7f968a" font-size="13">planning / voyage / arrived</text><text x="24" y="96" fill="#7f968a" font-size="13">resources · morale · choices</text><text x="24" y="122" fill="#7f968a" font-size="13">responsive HUD · subtitles</text></g>
+    <g transform="translate(400 130)"><rect width="270" height="150" rx="16" fill="#0c211f" stroke="#d4b36c" stroke-opacity=".42"/><text x="24" y="38" fill="#d9c99f" font-size="20">Historical model</text><text x="24" y="70" fill="#7f968a" font-size="13">3 corridors · 19 locations</text><text x="24" y="96" fill="#7f968a" font-size="13">evidence · confidence · sources</text><text x="24" y="122" fill="#7f968a" font-size="13">reconstruction labels</text></g>
+    <g transform="translate(740 130)"><rect width="270" height="150" rx="16" fill="#0c211f" stroke="#a94b35" stroke-opacity=".42"/><text x="24" y="38" fill="#d9c99f" font-size="20">3D world</text><text x="24" y="70" fill="#7f968a" font-size="13">terrain + land-mask shader</text><text x="24" y="96" fill="#7f968a" font-size="13">water · fog · longship</text><text x="24" y="122" fill="#7f968a" font-size="13">cinematic camera · LOD profiles</text></g>
+    <g transform="translate(1080 130)"><rect width="260" height="150" rx="16" fill="#0c211f" stroke="#7893a0" stroke-opacity=".42"/><text x="24" y="38" fill="#d9c99f" font-size="20">Sound layer</text><text x="24" y="70" fill="#7f968a" font-size="13">procedural ambience</text><text x="24" y="96" fill="#7f968a" font-size="13">music · timeline cues</text><text x="24" y="122" fill="#7f968a" font-size="13">optional speech fallback</text></g>
+  </g>
+  <g fill="none" stroke="#9f8148" stroke-width="2" marker-end="url(#arrow)"><path d="M330 205h60"/><path d="M670 205h60"/><path d="M1010 205h60"/></g>
+  <g font-family="Arial">
+    <g transform="translate(110 355)"><rect width="330" height="130" rx="16" fill="#171610" stroke="#d4b36c" stroke-opacity=".28"/><text x="24" y="38" fill="#d9c99f" font-size="19">Quality gate</text><text x="24" y="70" fill="#7f968a" font-size="13">ESLint · strict TypeScript · Vite build</text><text x="24" y="96" fill="#7f968a" font-size="13">production verifier · standalone verifier</text></g>
+    <g transform="translate(535 355)"><rect width="330" height="130" rx="16" fill="#171610" stroke="#d4b36c" stroke-opacity=".28"/><text x="24" y="38" fill="#d9c99f" font-size="19">Mobile contract</text><text x="24" y="70" fill="#7f968a" font-size="13">fixed camera angle · touch isolation</text><text x="24" y="96" fill="#7f968a" font-size="13">battery LOD · no postprocessing</text></g>
+    <g transform="translate(960 355)"><rect width="330" height="130" rx="16" fill="#171610" stroke="#d4b36c" stroke-opacity=".28"/><text x="24" y="38" fill="#d9c99f" font-size="19">Release</text><text x="24" y="70" fill="#7f968a" font-size="13">Pages artifact + gh-pages fallback</text><text x="24" y="96" fill="#7f968a" font-size="13">HTTP 200 + commit marker verification</text></g>
+  </g>
+  <g fill="none" stroke="#9f8148" stroke-width="2" marker-end="url(#arrow)"><path d="M440 420h85"/><path d="M865 420h85"/></g>
+  <text x="700" y="540" text-anchor="middle" fill="#6f7468" font-family="Arial" font-size="12" letter-spacing="2">BUILD ONLY WHAT CAN BE VERIFIED</text>
+</svg>

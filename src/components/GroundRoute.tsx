@@ -2,10 +2,77 @@ import { Line } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
 import * as THREE from 'three';
-import { makeGroundCurve } from '../lib/flatMap';
-import type { VikingRoute, VikingStop } from '../types';
+import type { VikingRoute } from '../types';
+import { createVoyageCurve } from '../lib/voyagePath';
 import { LongshipModel } from './LongshipModel';
-interface GroundRouteProps { route: VikingRoute; timelineYear: number; emphasized: boolean; shipsEnabled: boolean; shipSpeed: number; compact: boolean; journeyRouteId?: string | null; journeyProgress?: number; }
-function Longship({curve,progress,speed,color,compact}:{curve:THREE.CatmullRomCurve3;progress:number;speed:number;color:string;compact:boolean}){const groupRef=useRef<THREE.Group>(null);const sailRef=useRef<THREE.Mesh>(null);const current=useRef(progress);useFrame(({clock},rawDelta)=>{const group=groupRef.current;if(!group)return;const delta=Math.min(rawDelta,1/30);current.current=THREE.MathUtils.damp(current.current,progress,5.6*speed,delta);const t=THREE.MathUtils.clamp(current.current,.015,.985);const point=curve.getPointAt(t);const tangent=curve.getTangentAt(t).normalize();group.position.lerp(point,1-Math.exp(-delta*10));group.rotation.y=THREE.MathUtils.damp(group.rotation.y,Math.atan2(tangent.x,tangent.z),8,delta);group.position.y=point.y+Math.sin(clock.elapsedTime*1.75)*.014;group.rotation.z=Math.sin(clock.elapsedTime*1.18)*.022;if(sailRef.current)sailRef.current.rotation.y=Math.sin(clock.elapsedTime*.72)*.025});return <group ref={groupRef} scale={compact ? .52 : .66}><LongshipModel compact={compact} accent={color} sailRef={sailRef}/></group>}
-const segmentProgress=(start:VikingStop,end:VikingStop,year:number)=>THREE.MathUtils.clamp((year-start.year)/Math.max(1,end.year-start.year),0,1);
-export function GroundRoute({route,timelineYear,emphasized,shipsEnabled,shipSpeed,compact,journeyRouteId=null,journeyProgress=0}:GroundRouteProps){const segments=useMemo(()=>route.stops.slice(1).map((end,index)=>{const start=route.stops[index];return{start,end,curve:makeGroundCurve(start,end,index+route.startYear)}}),[route]);let latest=-1;segments.forEach(({start},index)=>{if(timelineYear>=start.year)latest=index});const activeJourney=journeyRouteId===route.id;const normalized=THREE.MathUtils.clamp(journeyProgress,0,.999999);const journeySegment=activeJourney?Math.min(segments.length-1,Math.floor(normalized*segments.length)):-1;const local=activeJourney?normalized*segments.length-journeySegment:0;return <group>{segments.map(({start,end,curve},index)=>{const chronology=segmentProgress(start,end,timelineYear);const progress=activeJourney?(index<journeySegment?1:index===journeySegment?Math.max(.02,local):0):chronology;if(progress<=0)return null;const full=curve.getPoints(compact?42:92);const points=full.slice(0,Math.max(2,Math.ceil(progress*(full.length-1))+1));return <group key={`${start.id}-${end.id}`}>{!compact&&emphasized&&<Line points={points} color={route.accent} lineWidth={5} transparent opacity={.1} depthWrite={false}/>}<Line points={points} color={route.color} lineWidth={emphasized?(compact?1.8:2.7):1} transparent opacity={emphasized?.92:.16} depthWrite={false}/>{shipsEnabled&&emphasized&&((activeJourney&&index===journeySegment)||(!activeJourney&&index===latest&&chronology>.04))&&<Longship curve={curve} progress={activeJourney?local:Math.max(.04,chronology*.92)} speed={shipSpeed} color={route.accent} compact={compact}/>}</group>})}</group>}
+
+interface GroundRouteProps {
+  route: VikingRoute;
+  progress: number;
+  emphasized: boolean;
+  compact: boolean;
+  showShip: boolean;
+}
+
+function ShipOnCurve({ curve, progress, compact, accent }: {
+  curve: THREE.CatmullRomCurve3;
+  progress: number;
+  compact: boolean;
+  accent: string;
+}) {
+  const groupRef = useRef<THREE.Group>(null);
+  const smoothProgress = useRef(progress);
+  const tangent = useMemo(() => new THREE.Vector3(), []);
+  const point = useMemo(() => new THREE.Vector3(), []);
+
+  useFrame(({ clock }, rawDelta) => {
+    if (!groupRef.current) return;
+    const delta = Math.min(rawDelta, 1 / 24);
+    smoothProgress.current = THREE.MathUtils.damp(smoothProgress.current, progress, 5.2, delta);
+    const p = THREE.MathUtils.clamp(smoothProgress.current, 0.001, 0.999);
+    curve.getPointAt(p, point);
+    curve.getTangentAt(p, tangent);
+    groupRef.current.position.copy(point);
+    groupRef.current.position.y += Math.sin(clock.elapsedTime * 1.8) * 0.018;
+    groupRef.current.rotation.y = Math.atan2(tangent.x, tangent.z);
+    groupRef.current.rotation.z = Math.sin(clock.elapsedTime * 1.15) * 0.018;
+  });
+
+  return (
+    <group ref={groupRef}>
+      <LongshipModel compact={compact} accent={accent} />
+    </group>
+  );
+}
+
+export function GroundRoute({ route, progress, emphasized, compact, showShip }: GroundRouteProps) {
+  const curve = useMemo(() => createVoyageCurve(route), [route]);
+  const fullPoints = useMemo(() => curve.getPoints(compact ? 72 : 160), [compact, curve]);
+  const visibleCount = Math.max(2, Math.ceil(THREE.MathUtils.clamp(progress, 0, 1) * (fullPoints.length - 1)) + 1);
+  const visiblePoints = fullPoints.slice(0, visibleCount);
+
+  return (
+    <group>
+      {!compact && emphasized && (
+        <Line points={visiblePoints} color={route.color} lineWidth={7} transparent opacity={0.11} depthWrite={false} />
+      )}
+      <Line
+        points={visiblePoints}
+        color={route.color}
+        lineWidth={emphasized ? (compact ? 1.7 : 2.7) : 0.9}
+        transparent
+        opacity={emphasized ? 0.92 : 0.12}
+        depthWrite={false}
+      />
+      {emphasized && visiblePoints.filter((_, index) => index % (compact ? 12 : 18) === 0).map((point, index) => (
+        <mesh key={index} position={point}>
+          <sphereGeometry args={[compact ? 0.022 : 0.032, 8, 6]} />
+          <meshBasicMaterial color={route.accent} transparent opacity={0.58} />
+        </mesh>
+      ))}
+      {showShip && emphasized && progress > 0.005 && progress < 0.999 && (
+        <ShipOnCurve curve={curve} progress={progress} compact={compact} accent={route.accent} />
+      )}
+    </group>
+  );
+}

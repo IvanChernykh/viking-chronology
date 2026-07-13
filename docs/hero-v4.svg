@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="720" viewBox="0 0 1600 720" role="img" aria-labelledby="title desc">
+<title id="title">Viking Chronology — историческая 3D-игра-хронология</title><desc id="desc">Кинематографический фьорд, поселение, длинный корабль и интерфейс скспедиции</desc>
+<defs>
+ <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#061315"/><stop offset=".58" stop-color="#0d2728"/><stop offset="1" stop-color="#071011"/></linearGradient>
+ <linearGradient id="sea" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#0a272b"/><stop offset=".6" stop-color="#133b3c"/><stop offset="1" stop-color="#07191b"/></linearGradient>
+ <linearGradient id="gold" x1="0" x2="1"><stop stop-color="#f1d795"/><stop offset=".48" stop-color="#c3944c"/><stop offset="1" stop-color="#77502b"/></linearGradient>
+ <radialGradient id="sun"><stop stop-color="#f2c978" stop-opacity=".38"/><stop offset="1" stop-color="#f2c978" stop-opacity="0"/></radialGradient>
+ <filter id="shadow"><feDropShadow dx="0" dy="22" stdDeviation="24" flood-opacity=".52"/></filter>
+ <filter id="glow"><feGaussianBlur stdDeviation="8"/></filter>
+</defs>
+<rect width="1600" height="720" rx="34" fill="url(#sky)"/>
+<circle cx="1150" cy="170" r="210" fill="url(#sun)"/>
+<path d="M0 325L120 260 210 300 340 190 455 287 590 215 730 305 840 232 970 310 1100 205 1240 300 1390 230 1600 315V470H0Z" fill="#101f20"/>
+<path d="M0 370L165 292 300 362 430 260 570 345 710 278 850 360 1010 270 1160 350 1305 288 1600 370V490H0Z" fill="#163131" opacity=".88"/>
+<path d="M0 405C250 382 430 430 650 408S1080 370 1600 420V720H0Z" fill="url(#sea)"/>
+<g fill="none" stroke-linecap="round" opacity=".28"><path d="M0 470C240 435 430 505 700 468s480-30 900 14" stroke="#8db5ae"/><path d="M0 520c260-42 470 40 770 2s520-20 830 18" stroke="#719792"/><path d="M0 585c260-28 540 38 850 1s470-8 750 24" stroke="#4e7774"/></g>
+<g transform="translate(1090 425)" filter="url(#shadow)">
+ <path d="M-255 70Q-170 112 18 86Q160 66 260 16Q208 115 24 138Q-154 151-255 70Z" fill="#4b2b19" stroke="#b0783d" stroke-width="4"/>
+ <path d="M-240 66Q-126 102 12 81Q153 60 238 23" fill="none" stroke="#d4a05a" stroke-width="5" opacity=".58"/>
+ <path d="M-5 80V-128" stroke="#5c3c25" stroke-width="9"/><path d="M-95-104H98" stroke="#5c3c25" stroke-width="7"/>
+ <path d="M-88-96Q-8-130 90-94V55Q0 10-88 54Z" fill="#d5bf85" stroke="#efdca5" stroke-width="3"/>
+ <path d="M-58-106V48M-22-118V27M16-118V32M53-107V47" stroke="#9f4e37" stroke-width="13" opacity=".86"/>
+ <g fill="#b44e37" stroke="#d5b36c" stroke-width="3"><circle cx="-155" cy="92" r="24"/><circle cx="-98" cy="104" r="24"/><circle cx="-40" cy="108" r="24"/><circle cx="20" cy="104" r="24"/><circle cx="78" cy="94" r="24"/></g>
+ <path d="M-252 70l-48-62 63 33z" fill="#5d321e"/><circle cx="-291" cy="4" r="12" fill="#d4b36c"/>
+</g>
+<g transform="translate(80 70)" filter="url(#shadow)">
+ <rect width="610" height="575" rx="24" fill="#071110" fill-opacity=".83" stroke="#d3ae63" stroke-opacity=".25"/>
+ <text x="42" y="52" fill="#b99752" font-family="Arial" font-size="12" font-weight="700" letter-spacing="4">VIKING CHRONOLOGY · RELEASE 4.0</text>
+ <text x="42" y="124" fill="#f1e0b8" font-family="Georgia" font-size="61">Пути северных</text><text x="42" y="184" fill="#f1e0b8" font-family="Georgia" font-size="61">мореходов</text>
+ <text x="42" y="228" fill="#8fa197" font-family="Arial" font-size="16">Историческая 3D-игра об экспедициях · 750–1021</text>
+ <path d="M42 262H568" stroke="#d3ae63" stroke-opacity=".22"/>
+ <g font-family="Arial"><text x="42" y="304" fill="#d7c49a" font-size="13" font-weight="700">01 · СОБЕРИТЕ СОВЕТ</text><text x="42" y="332" fill="#7f9287" font-size="14">Кормчая, корабельный мастер и скальд</text><text x="42" y="380" fill="#d7c49a" font-size="13" font-weight="700">02 · ПОДГОТОВЬТЕ КОРАБЛЬ</text><text x="42" y="408" fill="#7f9287" font-size="14">Провизия, древесина, парусина и мораль</text><text x="42" y="456" fill="#d7c49a" font-size="13" font-weight="700">03 · ПРОЙДИТЕ ИСТОРИЧЕСКИЙ КОРИДОР</text><text x="42" y="484" fill="#7f9287" font-size="14">Решения, последствия, источники и уверенность</text></g>
+ <rect x="42" y="520" width="250" height="48" rx="11" fill="url(#gold)"/><text x="167" y="550" text-anchor="middle" fill="#17120d" font-family="Arial" font-size="12" font-weight="800" letter-spacing="1.2">ВОЙТИ В ХРОНИКУ</text>
+ <text x="321" y="550" fill="#71837a" font-family="Arial" font-size="11">3 главы · 19 точек · русские субтитры</text>
+</g>
+<text x="1515" y="682" text-anchor="end" fill="#a78b54" font-family="serif" font-size="18" letter-spacing="9">ᚠ ᚢ ᚦ ᚬ ᚱ ᚴ ᚼ ᚾ ᛁ ᛅ ᛋ</text>
+</svg>

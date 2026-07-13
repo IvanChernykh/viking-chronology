@@ -1,17 +1,17 @@
 {
   "name": "viking-chronology",
   "private": true,
-  "version": "3.0.0",
+  "version": "4.0.0",
   "type": "module",
-  "description": "Historical 3D expedition game with procedural terrain, cinematic camera, voyage chapters, characters, Russian subtitles and evidence-led chronology.",
+  "description": "Museum-grade historical 3D expedition game with cinematic voyages, Russian subtitles, mobile-first controls and evidence-led chronology.",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
-    "build": "tsc -b && vite build",
+    "build": "vite build",
     "typecheck": "tsc -b --pretty false",
     "lint": "eslint .",
     "preview": "vite preview --host 0.0.0.0",
     "standalone": "vite build --config vite.standalone.config.ts && node scripts/make-standalone.mjs",
-    "check": "npm run lint && npm run typecheck && npm run build && npm run verify:production && npm run standalone && npm run verify:standalone",
+    "check": "node scripts/check.mjs",
     "verify:standalone": "node scripts/verify-standalone.mjs",
     "verify:production": "node scripts/verify-production.mjs"
   },
@@ -23,7 +23,6 @@
     "postprocessing": "^6.39.2",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "simplex-noise": "^4.0.3",
     "three": "^0.185.1",
     "topojson-client": "^3.1.0",
     "world-atlas": "^2.0.2"

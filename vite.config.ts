@@ -6,7 +6,7 @@ export default defineConfig({
   base: './',
   build: {
     target: 'es2018',
-    sourcemap: true,
+    sourcemap: false,
     modulePreload: { polyfill: true },
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
