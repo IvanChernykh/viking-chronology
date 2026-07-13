@@ -1,44 +1,45 @@
-# Viking Chronology — release notes
+# Viking Chronology 4.0.0
 
-## 3.0.0 — Expedition quality release
+## Release objective
 
-### Игровой цикл
+Version 4.0 replaces the passive map prototype with a coherent expedition game loop and a verifiable release process.
 
-- добавлены три экспедиционные главы;
-- добавлены ресурсы: провизия, древесина и парусина;
-- запуск требует подготовки и разговоров с командой;
-- добавлены фазы `planning`, `ready`, `voyage`, `arrived`;
-- прогресс путешествия синхронизирован с годом и финальной точкой.
+## Gameplay
 
-### Мир и графика
+- three selectable historical expedition chapters;
+- planning, voyage and arrival states;
+- crew consultation requirements;
+- food, timber, sailcloth and morale;
+- historical encounter choices with explicit consequences;
+- synchronized journey progress and chronology;
+- automatic final historical card.
 
-- плоская текстурная карта заменена displaced terrain geometry;
-- добавлены land mask, simplex-noise и mountain envelopes;
-- вода получила отдельный shader с волнами, мелководьем и пеной;
-- fog-of-war получил анимированный procedural noise;
-- добавлены instanced forests, rocks и revealed settlements;
-- longship и персонажи переработаны в более детальные процедурные модели;
-- desktop получил SMAA, сдержанный bloom, vignette и ACES tone mapping.
+## World and presentation
 
-### Камера и mobile
+- land-mask terrain displacement;
+- animated ocean shader;
+- surface-level routes;
+- detailed procedural longship;
+- expanded fjord settlement;
+- stylized articulated characters;
+- cinematic voyage camera;
+- desktop post-processing with a separate mobile budget.
 
-- `MapControls` заменён на `CameraControls`;
-- камера стала фиксированным постановочным rig;
-- один палец выполняет truck, два — dolly + truck;
-- камера автоматически следует за активной экспедицией;
-- HTML HUD отделён от жестов Canvas;
-- mobile отключает дорогие эффекты и сокращает geometry budget.
+## Mobile
 
-### PWA и Pages
+- fixed camera angle;
+- one-finger pan only outside voyage;
+- two-finger dolly/pan;
+- automatic camera during voyage;
+- isolated Canvas gestures and independent sheet scrolling;
+- safe-area and landscape handling.
 
-- добавлена HTTPS-only регистрация service worker;
-- Pages build создаёт `.nojekyll`, `404.html` и `version.txt`;
-- workflow публикует официальный artifact и fallback `gh-pages` branch;
-- после deployment выполняется реальная HTTP-проверка публичного URL;
-- release считается успешным только при HTTP 200 и найденной сигнатуре приложения.
+## Verification
 
-### Quality gate
-
-- добавлен production verifier;
-- CI использует locked `npm ci`;
-- полный `npm run check` включает lint, strict TypeScript, production build, production verification, standalone build и standalone verification.
+- ESLint;
+- strict TypeScript;
+- production Vite build;
+- production path and bundle-budget verifier;
+- standalone classic-IIFE build;
+- standalone compatibility verifier;
+- Pages HTTP/SHA verification.

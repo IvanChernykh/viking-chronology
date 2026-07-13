@@ -1,498 +1,147 @@
-import {
-  Clock3,
-  Compass,
-  Headphones,
-  Info,
-  Map,
-  Menu,
-  Network,
-  Users,
-  ShieldCheck,
-  Volume2,
-  VolumeX,
-  X,
-} from 'lucide-react';
+import { Anchor, BookOpen, Compass, Headphones, History, Menu, ShieldCheck, Volume2, VolumeX, X } from 'lucide-react';
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
-import { ControlPanel } from './components/ControlPanel';
 import { DialoguePanel } from './components/DialoguePanel';
-import { ExpeditionHUD, type ExpeditionPhase } from './components/ExpeditionHUD';
+import { EncounterPanel } from './components/EncounterPanel';
+import { ExpeditionHUD } from './components/ExpeditionHUD';
+import { SceneErrorBoundary } from './components/SceneErrorBoundary';
 import { StoryPanel } from './components/StoryPanel';
 import { Timeline } from './components/Timeline';
-import { SceneErrorBoundary } from './components/SceneErrorBoundary';
 import type { VikingCharacter } from './data/dialogues';
-import { expeditionChapters, initialSupplies, type ExpeditionId, type ExpeditionSupplies } from './data/expeditions';
-import { allStops, routes, timelineBounds } from './data/routes';
+import { defaultResources, expeditionChapters, type ExpeditionChoice, type ExpeditionMilestone, type ExpeditionResources } from './data/expeditions';
+import { routes, timelineBounds } from './data/routes';
 import { useMediaQuery } from './hooks/useMediaQuery';
 import { useVikingAudio } from './hooks/useVikingAudio';
-import type { AudioScene } from './lib/audioEngine';
 import { canSpeakDialogue, speakReconstructedNorse, stopDialogueSpeech } from './lib/dialogueSpeech';
 import type { RenderQuality, VikingStop } from './types';
 
-const VikingScene = lazy(() =>
-  import('./components/VikingScene').then((module) => ({ default: module.VikingScene })),
-);
-
-const medievalRoutePalette: Record<string, { color: string; accent: string }> = {
-  'north-atlantic': { color: '#d4b36c', accent: '#f0dfb0' },
-  'western-europe': { color: '#a94b35', accent: '#d99b86' },
-  'eastern-rivers': { color: '#6f8d77', accent: '#b4c7b2' },
-};
-
-const displayRoutes = routes.map((route) => ({
-  ...route,
-  ...(medievalRoutePalette[route.id] ?? {}),
-}));
-
-function resolveAudioScene(stop: VikingStop | null, routeId: string): AudioScene {
-  if (routeId === 'eastern-rivers') return 'river';
-  if (stop?.kind === 'settlement' || stop?.kind === 'court' || stop?.kind === 'homeland') {
-    return 'settlement';
-  }
-  if (stop?.kind === 'raid' || stop?.kind === 'trade') return 'coast';
-  return 'open-sea';
-}
+const VikingScene = lazy(() => import('./components/VikingScene').then((module) => ({ default: module.VikingScene })));
+type GameStage = 'planning' | 'voyage' | 'arrived';
+function clampResource(value: number): number { return Math.max(0, Math.min(100, Math.round(value))); }
 
 function App() {
   const isMobile = useMediaQuery('(max-width: 760px)');
   const isCoarsePointer = useMediaQuery('(pointer: coarse)');
-  const [activeRouteId, setActiveRouteId] = useState('all');
-  const [timelineYear, setTimelineYear] = useState(timelineBounds.min);
-  const [playing, setPlaying] = useState(false);
-  const [playbackSpeed, setPlaybackSpeed] = useState(1);
-  const [shipSpeed, setShipSpeed] = useState(1);
-  const [shipsEnabled, setShipsEnabled] = useState(true);
-  const [renderQuality, setRenderQuality] = useState<RenderQuality>('auto');
-  const [controlsOpen, setControlsOpen] = useState(false);
+  const [introOpen, setIntroOpen] = useState(true);
+  const [selectedChapterId, setSelectedChapterId] = useState(expeditionChapters[0].id);
+  const [stage, setStage] = useState<GameStage>('planning');
+  const [voyageProgress, setVoyageProgress] = useState(0);
+  const [resources, setResources] = useState<ExpeditionResources>(defaultResources);
+  const [morale, setMorale] = useState(76);
+  const [readyCrew, setReadyCrew] = useState<Set<string>>(new Set());
+  const [handledMilestones, setHandledMilestones] = useState<Set<string>>(new Set());
+  const [activeEncounter, setActiveEncounter] = useState<ExpeditionMilestone | null>(null);
   const [selectedStop, setSelectedStop] = useState<VikingStop | null>(null);
   const [activeCharacter, setActiveCharacter] = useState<VikingCharacter | null>(null);
   const [dialogueIndex, setDialogueIndex] = useState(0);
-  const [selectedExpeditionId, setSelectedExpeditionId] = useState<ExpeditionId>('western-europe');
-  const [expeditionPhase, setExpeditionPhase] = useState<ExpeditionPhase>('planning');
-  const [supplies, setSupplies] = useState<ExpeditionSupplies>(initialSupplies);
-  const [journeyProgress, setJourneyProgress] = useState(0);
-  const [spokenCharacterIds, setSpokenCharacterIds] = useState<Set<string>>(() => new Set());
+  const [renderQuality] = useState<RenderQuality>('auto');
+  const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const [sceneResetKey, setSceneResetKey] = useState(0);
   const previousFrame = useRef<number | null>(null);
-  const timelineAccumulator = useRef(0);
-  const lastTimelineCommit = useRef(0);
-  const lastTickYear = useRef<number | null>(null);
   const audio = useVikingAudio();
+  const selectedChapter = useMemo(() => expeditionChapters.find((chapter) => chapter.id === selectedChapterId) ?? expeditionChapters[0], [selectedChapterId]);
+  const activeRoute = useMemo(() => routes.find((route) => route.id === selectedChapter.routeId) ?? routes[0], [selectedChapter.routeId]);
+  const timelineYear = useMemo(() => selectedChapter.startYear + (selectedChapter.endYear - selectedChapter.startYear) * voyageProgress, [selectedChapter, voyageProgress]);
 
+  useEffect(() => { window.__vikingBootComplete?.(); }, []);
+  useEffect(() => { audio.setScene(stage === 'voyage' ? (selectedChapter.routeId === 'eastern-rivers' ? 'river' : 'open-sea') : 'settlement'); }, [audio, selectedChapter.routeId, stage]);
   useEffect(() => {
-    window.__vikingBootComplete?.();
-  }, []);
-
-  const selectedRoute = useMemo(
-    () => displayRoutes.find((route) => route.stops.some((stop) => stop.id === selectedStop?.id)) ?? displayRoutes[0],
-    [selectedStop],
-  );
-
-  const selectedExpedition = useMemo(
-    () => expeditionChapters.find((chapter) => chapter.id === selectedExpeditionId) ?? expeditionChapters[0],
-    [selectedExpeditionId],
-  );
-
-  const visibleStops = useMemo(
-    () =>
-      allStops.filter(
-        (stop) =>
-          stop.year <= timelineYear && (activeRouteId === 'all' || stop.routeId === activeRouteId),
-      ).length,
-    [activeRouteId, timelineYear],
-  );
-
-  useEffect(() => {
-    audio.setScene(resolveAudioScene(selectedStop, activeRouteId));
-  }, [activeRouteId, audio, selectedStop]);
-
-  useEffect(() => {
-    const rounded = Math.round(timelineYear / 5) * 5;
-    if (rounded !== lastTickYear.current) {
-      audio.playTimelineTick(rounded);
-      lastTickYear.current = rounded;
-    }
-  }, [audio, timelineYear]);
-
-  useEffect(() => {
-    if (!playing) {
-      previousFrame.current = null;
-      timelineAccumulator.current = 0;
-      lastTimelineCommit.current = 0;
-      return;
-    }
-
+    if (stage !== 'voyage' || activeEncounter) { previousFrame.current = null; return; }
     let frameId = 0;
-    const commitInterval = isMobile ? 90 : 50;
     const tick = (timestamp: number) => {
       if (previousFrame.current === null) previousFrame.current = timestamp;
-      const deltaSeconds = document.hidden
-        ? 0
-        : Math.min((timestamp - previousFrame.current) / 1000, 0.08);
+      const delta = document.hidden ? 0 : Math.min((timestamp - previousFrame.current) / 1000, 0.08);
       previousFrame.current = timestamp;
-      timelineAccumulator.current += deltaSeconds * 11 * playbackSpeed;
-
-      if (timestamp - lastTimelineCommit.current >= commitInterval && timelineAccumulator.current > 0) {
-        const increment = timelineAccumulator.current;
-        timelineAccumulator.current = 0;
-        lastTimelineCommit.current = timestamp;
-        setTimelineYear((currentYear) => {
-          const next = currentYear + increment;
-          if (next >= timelineBounds.max) {
-            setPlaying(false);
-            return timelineBounds.max;
-          }
-          return next;
-        });
-      }
-
+      setVoyageProgress((current) => Math.min(1, current + delta * (isMobile ? 0.018 : 0.022)));
       frameId = requestAnimationFrame(tick);
     };
-
     frameId = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frameId);
-  }, [isMobile, playing, playbackSpeed]);
-
+  }, [activeEncounter, isMobile, stage]);
   useEffect(() => {
-    if (expeditionPhase !== 'voyage') return;
-    let frameId = 0;
-    let previous: number | null = null;
-    let progress = journeyProgress;
-    let lastCommit = 0;
-    const durationSeconds = 42 / Math.max(0.65, shipSpeed);
-    const commitInterval = isMobile ? 80 : 42;
-    const animate = (timestamp: number) => {
-      if (previous === null) previous = timestamp;
-      const delta = document.hidden ? 0 : Math.min((timestamp - previous) / 1000, 0.08);
-      previous = timestamp;
-      progress = Math.min(1, progress + delta / durationSeconds);
-      if (timestamp - lastCommit >= commitInterval || progress >= 1) {
-        lastCommit = timestamp;
-        const year = selectedExpedition.departureYear + (selectedExpedition.arrivalYear - selectedExpedition.departureYear) * progress;
-        setJourneyProgress(progress);
-        setTimelineYear(year);
-        if (progress >= 1) {
-          setExpeditionPhase('arrived');
-          const route = displayRoutes.find((item) => item.id === selectedExpedition.routeId);
-          if (route) setSelectedStop(route.stops[route.stops.length - 1]);
-          return;
-        }
-      }
-      frameId = requestAnimationFrame(animate);
-    };
-    frameId = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(frameId);
-  }, [expeditionPhase, isMobile, journeyProgress, selectedExpedition, shipSpeed]);
-
+    if (stage !== 'voyage') return;
+    const nextMilestone = selectedChapter.milestones.find((milestone) => voyageProgress >= milestone.progress && !handledMilestones.has(milestone.id));
+    if (nextMilestone && !activeEncounter) {
+      const timer = window.setTimeout(() => { setActiveEncounter(nextMilestone); audio.playSelection(nextMilestone.year); }, 0);
+      return () => window.clearTimeout(timer);
+    }
+    return undefined;
+  }, [activeEncounter, audio, handledMilestones, selectedChapter.milestones, stage, voyageProgress]);
+  useEffect(() => {
+    if (stage === 'voyage' && voyageProgress >= 0.999) {
+      const timer = window.setTimeout(() => { setStage('arrived'); setSelectedStop(activeRoute.stops[activeRoute.stops.length - 1] ?? null); audio.playSelection(selectedChapter.endYear); }, 0);
+      return () => window.clearTimeout(timer);
+    }
+    return undefined;
+  }, [activeRoute.stops, audio, selectedChapter.endYear, stage, voyageProgress]);
+  useEffect(() => { audio.playTimelineTick(Math.round(timelineYear / 5) * 5); }, [audio, timelineYear]);
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setSelectedStop(null);
-        setActiveCharacter(null);
-        stopDialogueSpeech();
-        setControlsOpen(false);
-      }
+      if (event.key !== 'Escape') return;
+      setSelectedStop(null); setActiveCharacter(null); setActiveEncounter(null); setMobilePanelOpen(false); stopDialogueSpeech();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const handleSelectStop = (stop: VikingStop) => {
-    setActiveCharacter(null);
-    stopDialogueSpeech();
-    setSelectedStop(stop);
-    setTimelineYear((current) => Math.max(current, stop.year));
-    setPlaying(false);
-    setControlsOpen(false);
-    audio.playSelection(stop.year + stop.name.length);
-    if (isCoarsePointer && 'vibrate' in navigator) navigator.vibrate(12);
+  const selectChapter = (chapter: typeof selectedChapter) => {
+    if (stage === 'voyage') return;
+    setSelectedChapterId(chapter.id); setVoyageProgress(0); setSelectedStop(null); setHandledMilestones(new Set()); setActiveEncounter(null); setResources(defaultResources); setMorale(76);
   };
-
-  const handleSpeakCharacter = (character: VikingCharacter) => {
-    setSelectedStop(null);
-    setActiveCharacter(character);
-    setDialogueIndex(0);
-    setPlaying(false);
-    setControlsOpen(false);
-    setSpokenCharacterIds((current) => {
-      const next = new Set(current);
-      next.add(character.id);
-      return next;
-    });
-    speakReconstructedNorse(character.lines[0].oldNorse);
+  const handleResourceChange = (key: keyof ExpeditionResources, value: number) => setResources((current) => ({ ...current, [key]: clampResource(value) }));
+  const openDialogue = (character: VikingCharacter) => {
+    setActiveCharacter(character); setDialogueIndex(0); setSelectedStop(null); setReadyCrew((current) => new Set(current).add(character.id));
+    speakReconstructedNorse(character.lines[0].oldNorse); audio.playSelection(character.id.length * 79);
     if (isCoarsePointer && 'vibrate' in navigator) navigator.vibrate(10);
   };
-
   const advanceDialogue = () => {
     if (!activeCharacter) return;
-    const nextIndex = (dialogueIndex + 1) % activeCharacter.lines.length;
-    setDialogueIndex(nextIndex);
-    speakReconstructedNorse(activeCharacter.lines[nextIndex].oldNorse);
+    const next = (dialogueIndex + 1) % activeCharacter.lines.length; setDialogueIndex(next); speakReconstructedNorse(activeCharacter.lines[next].oldNorse);
   };
-
-  const closeDialogue = () => {
-    setActiveCharacter(null);
-    stopDialogueSpeech();
+  const launch = () => {
+    setStage('voyage'); setVoyageProgress(0.005); setSelectedStop(null); setActiveCharacter(null); setHandledMilestones(new Set()); setActiveEncounter(null); stopDialogueSpeech();
+    audio.playSelection(selectedChapter.startYear); if (!audio.enabled) void audio.toggle();
   };
-
-  const handleRouteChange = (routeId: string) => {
-    setActiveRouteId(routeId);
-    setControlsOpen(false);
-    if (routeId !== 'all') {
-      const route = displayRoutes.find((item) => item.id === routeId);
-      if (route) {
-        const availableStops = route.stops.filter((stop) => stop.year <= timelineYear);
-        setSelectedStop(availableStops[availableStops.length - 1] ?? route.stops[0]);
-      }
-    }
+  const applyChoice = (choice: ExpeditionChoice) => {
+    setResources((current) => ({ food: clampResource(current.food + (choice.effects.food ?? 0)), timber: clampResource(current.timber + (choice.effects.timber ?? 0)), sailcloth: clampResource(current.sailcloth + (choice.effects.sailcloth ?? 0)) }));
+    setMorale((current) => clampResource(current + (choice.effects.morale ?? 0)));
+    if (activeEncounter) setHandledMilestones((current) => new Set(current).add(activeEncounter.id));
+    setActiveEncounter(null);
   };
-
-  const selectExpedition = (id: ExpeditionId) => {
-    if (expeditionPhase === 'voyage') return;
-    setSelectedExpeditionId(id);
-    setActiveRouteId(id);
-    const chapter = expeditionChapters.find((item) => item.id === id);
-    if (chapter) setTimelineYear(Math.max(timelineBounds.min, chapter.departureYear - 12));
-    setSelectedStop(null);
-    closeDialogue();
+  const returnToCouncil = () => { setStage('planning'); setVoyageProgress(0); setSelectedStop(null); setActiveEncounter(null); setResources(defaultResources); setMorale(76); };
+  const handleSelectStop = (stop: VikingStop) => {
+    setSelectedStop(stop); setActiveCharacter(null); stopDialogueSpeech(); audio.playSelection(stop.year + stop.name.length);
+    if (isCoarsePointer && 'vibrate' in navigator) navigator.vibrate(12);
   };
-
-  const supplyExpedition = (resource: keyof ExpeditionSupplies) => {
-    if (expeditionPhase !== 'planning') return;
-    setSupplies((current) => ({ ...current, [resource]: Math.min(100, current[resource] + 9) }));
-    audio.playSelection(resource.length * 11);
-    if (isCoarsePointer && 'vibrate' in navigator) navigator.vibrate(8);
-  };
-
-  const launchExpedition = () => {
-    const requirementsMet = Object.entries(selectedExpedition.requirements).every(
-      ([key, value]) => supplies[key as keyof ExpeditionSupplies] >= value,
-    );
-    if (!requirementsMet || spokenCharacterIds.size < 2) return;
-    setSelectedStop(null);
-    closeDialogue();
-    setPlaying(false);
-    setActiveRouteId(selectedExpedition.routeId);
-    setTimelineYear(selectedExpedition.departureYear);
-    setJourneyProgress(0);
-    setExpeditionPhase('voyage');
-    if (!audio.enabled) void audio.toggle();
-  };
-
-  const returnToVillage = () => {
-    setExpeditionPhase('planning');
-    setJourneyProgress(0);
-    setTimelineYear(timelineBounds.min);
-    setSelectedStop(null);
-    setActiveRouteId('all');
-  };
-
   const navigateStory = (direction: -1 | 1) => {
     if (!selectedStop) return;
-    const stops = selectedRoute.stops;
-    const index = stops.findIndex((stop) => stop.id === selectedStop.id);
-    const nextIndex = (index + direction + stops.length) % stops.length;
-    handleSelectStop(stops[nextIndex]);
-  };
-
-  const togglePlaying = () => {
-    if (!playing && timelineYear >= timelineBounds.max - 0.5) {
-      setTimelineYear(timelineBounds.min);
-      setSelectedStop(null);
-    }
-    setPlaying((value) => !value);
+    const index = activeRoute.stops.findIndex((stop) => stop.id === selectedStop.id);
+    handleSelectStop(activeRoute.stops[(index + direction + activeRoute.stops.length) % activeRoute.stops.length]);
   };
 
   return (
-    <main className={`app-shell ${selectedStop ? 'app-shell--story-open' : ''} ${activeCharacter ? 'app-shell--dialogue-open' : ''}`}>
-      <div className="ornament ornament--top" aria-hidden="true">ᚠ ᚢ ᚦ ᚬ ᚱ ᚴ ᚼ ᚾ ᛁ ᛅ ᛋ ᛏ ᛒ ᛘ ᛚ ᛦ</div>
+    <main className={`app-shell game-shell game-shell--${stage} ${introOpen ? 'game-shell--intro' : ''}`}>
       <div className="scene-layer">
-        <SceneErrorBoundary
-          resetKey={sceneResetKey}
-          onRetry={() => setSceneResetKey((key) => key + 1)}
-        >
-          <Suspense
-            fallback={
-              <div className="scene-loading" role="status">
-                <span aria-hidden="true" />
-                <strong>Подготовка 3D-мира</strong>
-                <small>Рельеф, поселение, персонажи и исторические маршруты</small>
-              </div>
-            }
-          >
-            <VikingScene
-              key={sceneResetKey}
-              routes={displayRoutes}
-              activeRouteId={activeRouteId}
-              timelineYear={timelineYear}
-              selectedStop={selectedStop}
-              shipsEnabled={shipsEnabled}
-              shipSpeed={shipSpeed}
-              renderQuality={renderQuality}
-              isMobile={isMobile}
-              journeyRouteId={expeditionPhase === 'voyage' || expeditionPhase === 'arrived' ? selectedExpedition.routeId : null}
-              journeyProgress={journeyProgress}
-              onSelectStop={handleSelectStop}
-              onSpeakCharacter={handleSpeakCharacter}
-            />
+        <SceneErrorBoundary resetKey={sceneResetKey} onRetry={() => setSceneResetKey((key) => key + 1)}>
+          <Suspense fallback={<div className="scene-loading"><span /><strong>Строим исторический мир</strong><small>Фьорд, рельеф, судно и экспедиционный маршрут</small></div>}>
+            <VikingScene key={sceneResetKey} routes={routes} activeRouteId={activeRoute.id} timelineYear={timelineYear} voyageProgress={voyageProgress} stage={stage} selectedStop={selectedStop} renderQuality={renderQuality} isMobile={isMobile} readyCharacters={readyCrew} onSelectStop={handleSelectStop} onSpeakCharacter={openDialogue} />
           </Suspense>
         </SceneErrorBoundary>
       </div>
-
-      <div className="world-mode-chip glass-panel" aria-label="Режим трёхмерного мира">
-        <Map size={15} />
-        <div><strong>Живая историческая экспедиция</strong><span>перетащите мир · сведите пальцы для масштаба</span></div>
-        <Users size={15} />
-      </div>
-
-      <header className="app-header">
-        <div className="brand-mark" aria-hidden="true">
-          <span>ᚱ</span>
-        </div>
-        <div className="brand-copy">
-          <span className="eyebrow">Исторический атлас VIII–XI веков</span>
-          <h1>Пути северных мореходов</h1>
-          <span className="brand-subtitle">Маршруты, торговля, поселения и источники</span>
-        </div>
-        <div className="header-metrics">
-          <div><Network size={15} /><span><strong>{displayRoutes.length}</strong> направления</span></div>
-          <div><Clock3 size={15} /><span><strong>{Math.round(timelineYear)}</strong> год</span></div>
-          <div><Compass size={15} /><span><strong>{visibleStops}</strong> точек</span></div>
-        </div>
-        <button
-          type="button"
-          className={`header-audio-button icon-button ${audio.enabled ? 'header-audio-button--active' : ''}`}
-          onClick={() => void audio.toggle()}
-          aria-label={audio.enabled ? 'Выключить звук' : 'Включить звуковую реконструкцию'}
-          title={audio.enabled ? 'Выключить звук' : 'Включить звуковую реконструкцию'}
-        >
-          {audio.enabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
-        </button>
-        <button
-          type="button"
-          className="mobile-menu-button icon-button"
-          onClick={() => setControlsOpen((open) => !open)}
-          aria-label="Открыть настройки"
-          aria-expanded={controlsOpen}
-        >
-          {controlsOpen ? <X size={19} /> : <Menu size={19} />}
-        </button>
+      <header className="game-topbar">
+        <div className="game-brand"><span className="game-brand__mark">ᚠ</span><div><span>Viking Chronology</span><small>Историческая экспедиция · 750–1021</small></div></div>
+        <div className="game-topbar__center"><span><History size={14} /> {Math.round(timelineYear)}</span><strong>{selectedChapter.title}</strong><span><ShieldCheck size={14} /> мораль {morale}</span></div>
+        <div className="game-topbar__actions"><button type="button" onClick={() => void audio.toggle()} aria-label="Переключить звук">{audio.enabled ? <Volume2 size={18} /> : <VolumeX size={18} />}</button><button type="button" className="mobile-game-menu" onClick={() => setMobilePanelOpen((value) => !value)} aria-label="Открыть управление">{mobilePanelOpen ? <X size={18} /> : <Menu size={18} />}</button></div>
       </header>
-
-      {controlsOpen && (
-        <button
-          type="button"
-          className="mobile-backdrop"
-          aria-label="Закрыть настройки"
-          onClick={() => setControlsOpen(false)}
-        />
-      )}
-
-      <ExpeditionHUD
-        selectedId={selectedExpeditionId}
-        supplies={supplies}
-        phase={expeditionPhase}
-        progress={journeyProgress}
-        spokenCharacters={spokenCharacterIds.size}
-        onSelect={selectExpedition}
-        onSupply={supplyExpedition}
-        onLaunch={launchExpedition}
-        onReturn={returnToVillage}
-      />
-
-      <div className={`control-panel-wrap ${controlsOpen ? 'control-panel-wrap--open' : ''}`}>
-        <ControlPanel
-          routes={displayRoutes}
-          activeRouteId={activeRouteId}
-          shipsEnabled={shipsEnabled}
-          shipSpeed={shipSpeed}
-          renderQuality={renderQuality}
-          audioSupported={audio.supported}
-          audioEnabled={audio.enabled}
-          ambienceEnabled={audio.ambienceEnabled}
-          musicEnabled={audio.musicEnabled}
-          masterVolume={audio.masterVolume}
-          ambienceVolume={audio.ambienceVolume}
-          musicVolume={audio.musicVolume}
-          onRouteChange={handleRouteChange}
-          onShipsChange={setShipsEnabled}
-          onShipSpeedChange={setShipSpeed}
-          onRenderQualityChange={setRenderQuality}
-          onAudioToggle={audio.toggle}
-          onAmbienceChange={audio.setAmbienceEnabled}
-          onMusicChange={audio.setMusicEnabled}
-          onMasterVolumeChange={audio.setMasterVolume}
-          onAmbienceVolumeChange={audio.setAmbienceVolume}
-          onMusicVolumeChange={audio.setMusicVolume}
-        />
+      <div className={`game-left-panel ${mobilePanelOpen ? 'game-left-panel--open' : ''}`}>
+        <ExpeditionHUD chapters={expeditionChapters} selected={selectedChapter} resources={resources} morale={morale} readyCrew={readyCrew.size} stage={stage} voyageProgress={voyageProgress} onSelect={selectChapter} onResourceChange={handleResourceChange} onLaunch={launch} onReturn={returnToCouncil} />
       </div>
-
-      <section className={`method-note glass-panel ${expeditionPhase !== 'planning' ? 'method-note--hidden' : ''}`}>
-        <ShieldCheck size={17} />
-        <div>
-          <strong>Историческая дисциплина</strong>
-          <p>
-            Мир раскрывается по датам и источникам. Реплики персонажей — маркированная языковая реконструкция,
-            а маршруты проходят по поверхности воды и суши без «летающих» кораблей.
-          </p>
-        </div>
-      </section>
-
-      {!audio.enabled && audio.supported && !controlsOpen && (
-        <button type="button" className="sound-invitation" onClick={() => void audio.toggle()}>
-          <Headphones size={17} />
-          <span><strong>Включить звуковую среду</strong><small>ветер, море, дерево и инструментальная реконструкция</small></span>
-        </button>
-      )}
-
-      {activeCharacter && (
-        <DialoguePanel
-          character={activeCharacter}
-          lineIndex={dialogueIndex}
-          speechSupported={canSpeakDialogue()}
-          onSpeak={() => speakReconstructedNorse(activeCharacter.lines[dialogueIndex].oldNorse)}
-          onNext={advanceDialogue}
-          onClose={closeDialogue}
-        />
-      )}
-
-      {selectedStop && (
-        <StoryPanel
-          key={selectedStop.id}
-          stop={selectedStop}
-          route={selectedRoute}
-          onClose={() => setSelectedStop(null)}
-          onPrevious={() => navigateStory(-1)}
-          onNext={() => navigateStory(1)}
-        />
-      )}
-
-      <Timeline
-        minYear={timelineBounds.min}
-        maxYear={timelineBounds.max}
-        year={timelineYear}
-        playing={playing}
-        playbackSpeed={playbackSpeed}
-        onYearChange={(year) => {
-          if (expeditionPhase === 'voyage') return;
-          setTimelineYear(year);
-          setPlaying(false);
-        }}
-        onTogglePlaying={togglePlaying}
-        onReset={() => {
-          setTimelineYear(timelineBounds.min);
-          setPlaying(false);
-          setSelectedStop(null);
-          setExpeditionPhase('planning');
-          setJourneyProgress(0);
-          closeDialogue();
-        }}
-        onPlaybackSpeedChange={setPlaybackSpeed}
-      />
-
-      <div className="historical-disclaimer" role="note">
-        <Info size={13} />
-        <span>Звук и визуальная среда — исследовательская реконструкция, а не запись прошлого.</span>
-      </div>
+      <div className="game-timeline-wrap"><Timeline minYear={timelineBounds.min} maxYear={timelineBounds.max} year={timelineYear} playing={stage === 'voyage'} playbackSpeed={1} onYearChange={() => undefined} onTogglePlaying={() => undefined} onReset={returnToCouncil} onPlaybackSpeedChange={() => undefined} /></div>
+      {selectedStop && <StoryPanel stop={selectedStop} route={activeRoute} onClose={() => setSelectedStop(null)} onPrevious={() => navigateStory(-1)} onNext={() => navigateStory(1)} />}
+      {activeCharacter && <DialoguePanel character={activeCharacter} lineIndex={dialogueIndex} speechSupported={canSpeakDialogue()} onSpeak={() => speakReconstructedNorse(activeCharacter.lines[dialogueIndex].oldNorse)} onNext={advanceDialogue} onClose={() => { setActiveCharacter(null); stopDialogueSpeech(); }} />}
+      {activeEncounter && <EncounterPanel milestone={activeEncounter} onChoose={applyChoice} />}
+      {!audio.enabled && !introOpen && <button type="button" className="sound-invitation" onClick={() => void audio.toggle()}><Headphones size={18} /><span><strong>Включить звуковой мир</strong><small>море, дерево, ветер и музыкальная реконструкция</small></span></button>}
+      <div className="historical-ribbon"><BookOpen size={13} /> Реконструкция отделена от подтверждённых фактов и снабжена источниками</div>
+      {introOpen && <section className="cinematic-intro"><div className="cinematic-intro__veil" /><div className="cinematic-intro__content"><span className="cinematic-intro__runes">ᚠ ᚢ ᚦ ᚬ ᚱ ᚴ ᚼ ᚾ ᛁ ᛅ ᛋ</span><p className="eyebrow">Историческая 3D-игра-хронология</p><h1>Пути северных мореходов</h1><p className="cinematic-intro__lead">Начните во фьорде. Соберите совет. Подготовьте корабль. Пройдите исторический коридор и отделите свидетельства от реконструкции.</p><div className="cinematic-intro__facts"><span><Compass size={16} /> 3 экспедиции</span><span><Anchor size={16} /> 19 исторических точек</span><span><ShieldCheck size={16} /> русские субтитры</span></div><button type="button" onClick={() => { setIntroOpen(false); if (!audio.enabled) void audio.toggle(); }}><span>Войти в хронику</span><Compass size={19} /></button><small>Лучший опыт: наушники · WebGL 2 · горизонтальная ориентация на телефоне</small></div></section>}
     </main>
   );
 }
