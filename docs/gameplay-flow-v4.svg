@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="430" viewBox="0 0 1400 430" role="img" aria-labelledby="title desc">
+  <title id="title">Игровой цикл Viking Chronology</title>
+  <desc id="desc">От совета экспедиции через подготовку и путешествие к историческому результату</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#071516"/><stop offset="1" stop-color="#0f0e0b"/></linearGradient>
+    <linearGradient id="gold" x1="0" x2="1"><stop stop-color="#e6ca84"/><stop offset="1" stop-color="#8e6334"/></linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="18" stdDeviation="18" flood-opacity=".38"/></filter>
+  </defs>
+  <rect width="1400" height="430" rx="28" fill="url(#bg)"/>
+  <path d="M70 64h1260M70 366h1260" stroke="#d7b56d" stroke-opacity=".14"/>
+  <text x="70" y="45" fill="#a98a4e" font-family="Arial" font-size="13" letter-spacing="3">GAMEPLAY LOOP · EVIDENCE-LED HISTORY</text>
+  <g filter="url(#shadow)">
+    <g transform="translate(70 105)">
+      <rect width="280" height="210" rx="18" fill="#0d1f1d" stroke="#d7b56d" stroke-opacity=".25"/>
+      <circle cx="44" cy="44" r="22" fill="#563a22" stroke="#d7b56d" stroke-opacity=".48"/>
+      <text x="44" y="51" text-anchor="middle" fill="#f1d998" font-family="Georgia" font-size="23">I</text>
+      <text x="28" y="95" fill="#f0dfb5" font-family="Georgia" font-size="26">Совет</text>
+      <text x="28" y="128" fill="#83998b" font-family="Arial" font-size="13">Выбор главы, риска и цели</text>
+      <text x="28" y="155" fill="#83998b" font-family="Arial" font-size="13">Разговоры с тремя членами команды</text>
+      <text x="28" y="182" fill="#83998b" font-family="Arial" font-size="13">Граница факта и реконструкции</text>
+    </g>
+    <g transform="translate(385 105)">
+      <rect width="280" height="210" rx="18" fill="#0d1f1d" stroke="#d7b56d" stroke-opacity=".25"/>
+      <circle cx="44" cy="44" r="22" fill="#563a22" stroke="#d7b56d" stroke-opacity=".48"/>
+      <text x="44" y="51" text-anchor="middle" fill="#f1d998" font-family="Georgia" font-size="23">II</text>
+      <text x="28" y="95" fill="#f0dfb5" font-family="Georgia" font-size="26">Подготовка</text>
+      <text x="28" y="128" fill="#83998b" font-family="Arial" font-size="13">Провизия, древесина, парусина</text>
+      <text x="28" y="155" fill="#83998b" font-family="Arial" font-size="13">Состояние корабля и мораль</text>
+      <text x="28" y="182" fill="#83998b" font-family="Arial" font-size="13">Проверяемая готовность к выходу</text>
+    </g>
+    <g transform="translate(700 105)">
+      <rect width="280" height="210" rx="18" fill="#0d1f1d" stroke="#d7b56d" stroke-opacity=".25"/>
+      <circle cx="44" cy="44" r="22" fill="#563a22" stroke="#d7b56d" stroke-opacity=".48"/>
+      <text x="44" y="51" text-anchor="middle" fill="#f1d998" font-family="Georgia" font-size="23">III</text>
+      <text x="28" y="95" fill="#f0dfb5" font-family="Georgia" font-size="26">Путешествие</text>
+      <text x="28" y="128" fill="#83998b" font-family="Arial" font-size="13">Корабль идёт по поверхности воды</text>
+      <text x="28" y="155" fill="#83998b" font-family="Arial" font-size="13">Кинематографическая боковая камера</text>
+      <text x="28" y="182" fill="#83998b" font-family="Arial" font-size="13">События и решения с последствиями</text>
+    </g>
+    <g transform="translate(1015 105)">
+      <rect width="315" height="210" rx="18" fill="#0d1f1d" stroke="#d7b56d" stroke-opacity=".25"/>
+      <circle cx="44" cy="44" r="22" fill="#563a22" stroke="#d7b56d" stroke-opacity=".48"/>
+      <text x="44" y="51" text-anchor="middle" fill="#f1d998" font-family="Georgia" font-size="23">IV</text>
+      <text x="28" y="95" fill="#f0dfb5" font-family="Georgia" font-size="26">Хроника</text>
+      <text x="28" y="128" fill="#83998b" font-family="Arial" font-size="13">Открытие исторической точки</text>
+      <text x="28" y="155" fill="#83998b" font-family="Arial" font-size="13">Свидетельства, уверенность, источники</text>
+      <text x="28" y="182" fill="#83998b" font-family="Arial" font-size="13">Возвращение и следующая глава</text>
+    </g>
+  </g>
+  <g fill="none" stroke="url(#gold)" stroke-width="3" stroke-linecap="round">
+    <path d="M350 210h25"/><path d="M665 210h25"/><path d="M980 210h25"/>
+  </g>
+  <g fill="#d7b56d"><path d="M370 204l10 6-10 6z"/><path d="M685 204l10 6-10 6z"/><path d="M1000 204l10 6-10 6z"/></g>
+  <text x="700" y="390" text-anchor="middle" fill="#746f5e" font-family="Arial" font-size="12" letter-spacing="2">ТРИ ГЛАВЫ · ДЕВЯТНАДЦАТЬ ЛОКАЦИЙ · 750–1021</text>
+</svg>

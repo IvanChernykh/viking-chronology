@@ -1,23 +1,49 @@
-import { Anchor, ChevronRight, Compass, Hammer, PackagePlus, Sailboat, ShieldCheck, Users, Wheat } from 'lucide-react';
-import { expeditionChapters, type ExpeditionChapter, type ExpeditionId, type ExpeditionSupplies } from '../data/expeditions';
+import { Anchor, Check, ChevronRight, Compass, Package, Shield, Users, Wheat, Wrench } from 'lucide-react';
+import type { CSSProperties } from 'react';
+import type { ExpeditionChapter, ExpeditionResources } from '../data/expeditions';
 
-export type ExpeditionPhase = 'planning' | 'ready' | 'voyage' | 'arrived';
-interface ExpeditionHUDProps { selectedId: ExpeditionId; supplies: ExpeditionSupplies; phase: ExpeditionPhase; progress: number; spokenCharacters: number; onSelect: (id: ExpeditionId) => void; onSupply: (resource: keyof ExpeditionSupplies) => void; onLaunch: () => void; onReturn: () => void; }
-const percent = (value: number) => `${Math.round(value)}%`;
-const requirementMet = (value: number, requirement: number) => value >= requirement;
+interface ExpeditionHUDProps {
+  chapters: ExpeditionChapter[];
+  selected: ExpeditionChapter;
+  resources: ExpeditionResources;
+  morale: number;
+  readyCrew: number;
+  stage: 'planning' | 'voyage' | 'arrived';
+  voyageProgress: number;
+  onSelect: (chapter: ExpeditionChapter) => void;
+  onResourceChange: (key: keyof ExpeditionResources, value: number) => void;
+  onLaunch: () => void;
+  onReturn: () => void;
+}
 
-function ResourceRow({ icon, label, resource, value, requirement, disabled, onSupply }: { icon: React.ReactNode; label: string; resource: keyof ExpeditionSupplies; value: number; requirement: number; disabled: boolean; onSupply: (resource: keyof ExpeditionSupplies) => void; }) {
-  const met = requirementMet(value, requirement);
-  return <div className={`resource-row ${met ? 'resource-row--ready' : ''}`}><span className="resource-row__icon">{icon}</span><div className="resource-row__main"><div><strong>{label}</strong><span>{value} / {requirement}</span></div><span className="resource-meter"><i style={{ width: percent(Math.min(100, value)) }} /></span></div><button type="button" onClick={() => onSupply(resource)} disabled={disabled || value >= 100} aria-label={`Пополнить: ${label}`}><PackagePlus size={15} /></button></div>;
-}
-function ChapterButton({ chapter, active, onSelect }: { chapter: ExpeditionChapter; active: boolean; onSelect: () => void }) {
-  return <button type="button" className={`chapter-card ${active ? 'chapter-card--active' : ''}`} onClick={onSelect}><span className="chapter-card__index">{chapter.durationLabel}</span><span className="chapter-card__copy"><strong>{chapter.title}</strong><small>{chapter.subtitle}</small></span><ChevronRight size={16} /></button>;
-}
-export function ExpeditionHUD({ selectedId, supplies, phase, progress, spokenCharacters, onSelect, onSupply, onLaunch, onReturn }: ExpeditionHUDProps) {
-  const chapter = expeditionChapters.find((item) => item.id === selectedId) ?? expeditionChapters[0];
-  const requirementsMet = Object.entries(chapter.requirements).every(([key, value]) => supplies[key as keyof ExpeditionSupplies] >= value);
-  const dialogueMet = spokenCharacters >= 2;
-  const ready = requirementsMet && dialogueMet;
-  if (phase === 'voyage' || phase === 'arrived') return <aside className="voyage-hud glass-panel" aria-label="Состояние экспедиции"><div className="voyage-hud__heading"><span className="voyage-hud__icon"><Sailboat size={20} /></span><div><span className="eyebrow">Экспедиция</span><strong>{chapter.title}</strong><small>{chapter.subtitle}</small></div></div><div className="voyage-hud__progress"><div><span>{phase === 'arrived' ? 'Маршрут завершён' : 'Путь экспедиции'}</span><strong>{Math.round(progress * 100)}%</strong></div><span><i style={{ width: percent(progress * 100) }} /></span></div><p>{phase === 'arrived' ? chapter.historicalFrame : chapter.objective}</p>{phase === 'arrived' && <button type="button" className="primary-action" onClick={onReturn}>Вернуться в поселение</button>}</aside>;
-  return <aside className="expedition-hud glass-panel" aria-label="Подготовка экспедиции"><div className="expedition-hud__topline"><div><span className="eyebrow">Совет экспедиции</span><h2>Подготовить путь</h2></div><span className={`readiness-seal ${ready ? 'readiness-seal--ready' : ''}`}>{ready ? <ShieldCheck size={17} /> : <Anchor size={17} />}{ready ? 'готово' : 'подготовка'}</span></div><div className="chapter-list">{expeditionChapters.map((item) => <ChapterButton key={item.id} chapter={item} active={item.id === selectedId} onSelect={() => onSelect(item.id)} />)}</div><section className="chapter-brief"><div className="chapter-brief__metrics"><span><Compass size={14} /> {chapter.departureYear}–{chapter.arrivalYear}</span><span><Users size={14} /> {chapter.crew} человек</span><span><Anchor size={14} /> риск: {chapter.risk}</span></div><h3>{chapter.objective}</h3><p>{chapter.historicalFrame}</p></section><div className="resource-stack"><ResourceRow icon={<Wheat size={16} />} label="Провизия" resource="provisions" value={supplies.provisions} requirement={chapter.requirements.provisions} disabled={phase !== 'planning'} onSupply={onSupply} /><ResourceRow icon={<Hammer size={16} />} label="Древесина" resource="timber" value={supplies.timber} requirement={chapter.requirements.timber} disabled={phase !== 'planning'} onSupply={onSupply} /><ResourceRow icon={<Sailboat size={16} />} label="Парусина" resource="sailcloth" value={supplies.sailcloth} requirement={chapter.requirements.sailcloth} disabled={phase !== 'planning'} onSupply={onSupply} /></div><div className="readiness-checks"><span className={dialogueMet ? 'is-complete' : ''}><i />Поговорить минимум с двумя членами команды ({spokenCharacters}/2)</span><span className={requirementsMet ? 'is-complete' : ''}><i />Собрать минимальный запас для выбранной главы</span></div><button type="button" className="primary-action expedition-launch" onClick={onLaunch} disabled={!ready}><Sailboat size={18} /><span><strong>Начать экспедицию</strong><small>{ready ? 'Корабль выйдет из фьорда' : 'Завершите подготовку'}</small></span></button></aside>;
+const resourceMeta: Record<keyof ExpeditionResources, { label: string; icon: typeof Wheat }> = {
+  food: { label: 'Провизия', icon: Wheat },
+  timber: { label: 'Древесина', icon: Wrench },
+  sailcloth: { label: 'Парусина', icon: Anchor },
+};
+
+export function ExpeditionHUD({ chapters, selected, resources, morale, readyCrew, stage, voyageProgress, onSelect, onResourceChange, onLaunch, onReturn }: ExpeditionHUDProps) {
+  const requirementsMet = (Object.keys(selected.requirements) as Array<keyof ExpeditionResources>)
+    .every((key) => resources[key] >= selected.requirements[key]);
+  const ready = requirementsMet && readyCrew >= 2;
+
+  return (
+    <aside className={`expedition-hud expedition-hud--${stage}`} aria-label="Управление экспедицией">
+      <div className="expedition-hud__heading">
+        <div><span className="eyebrow">Экспедиционный совет</span><h2>{stage === 'voyage' ? 'Переход в море' : selected.title}</h2></div>
+        <div className="expedition-hud__risk"><Shield size={14} /> {selected.risk}</div>
+      </div>
+      {stage !== 'voyage' && <div className="chapter-selector" role="list">{chapters.map((chapter) => <button key={chapter.id} type="button" className={`chapter-card ${chapter.id === selected.id ? 'chapter-card--active' : ''}`} style={{ '--chapter-accent': chapter.accent } as CSSProperties} onClick={() => onSelect(chapter)}><span>{chapter.period}</span><strong>{chapter.title}</strong><small>{chapter.subtitle}</small></button>)}</div>}
+      <div className="expedition-hud__objective"><Compass size={17} /><p>{selected.objective}</p></div>
+      {stage === 'planning' && <>
+        <div className="readiness-row"><div><Users size={15} /><span>Совет команды</span><strong>{readyCrew}/3</strong></div><div className={readyCrew >= 2 ? 'status-ok' : ''}>{readyCrew >= 2 ? <Check size={14} /> : <ChevronRight size={14} />} минимум 2</div></div>
+        <div className="resource-grid">{(Object.keys(resourceMeta) as Array<keyof ExpeditionResources>).map((key) => { const meta = resourceMeta[key]; const Icon = meta.icon; const required = selected.requirements[key]; const sufficient = resources[key] >= required; return <label key={key} className={`resource-control ${sufficient ? 'resource-control--ready' : ''}`}><span><Icon size={14} /> {meta.label}</span><strong>{resources[key]} <small>/ {required}</small></strong><input type="range" min={0} max={100} step={1} value={resources[key]} onChange={(event) => onResourceChange(key, Number(event.target.value))} /></label>; })}</div>
+        <button type="button" className="launch-button" disabled={!ready} onClick={onLaunch}><Package size={17} /><span>{ready ? 'Отдать приказ к отплытию' : 'Подготовка не завершена'}</span><ChevronRight size={17} /></button>
+        {!ready && <p className="launch-hint">Поговорите минимум с двумя членами команды и доведите запасы до требований главы.</p>}
+      </>}
+      {stage === 'voyage' && <div className="voyage-status"><div className="voyage-status__topline"><span>Прогресс перехода</span><strong>{Math.round(voyageProgress * 100)}%</strong></div><div className="voyage-status__track"><span style={{ width: `${voyageProgress * 100}%` }} /></div><div className="voyage-status__metrics"><span>Мораль <strong>{morale}</strong></span><span>Команда <strong>{selected.crewSize}</strong></span><span>Период <strong>{selected.period}</strong></span></div></div>}
+      {stage === 'arrived' && <button type="button" className="launch-button launch-button--return" onClick={onReturn}><Anchor size={17} /><span>Вернуться к совету</span><ChevronRight size={17} /></button>}
+      <p className="expedition-hud__method">{selected.historicalFrame}</p>
+    </aside>
+  );
 }
