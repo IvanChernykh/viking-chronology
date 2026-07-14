@@ -38,9 +38,9 @@ jobs:
         run: |
           export PATH="$HOME/.rokit/bin:$PATH"
           {
-            rokit add rojo-rbx/rojo@7.7.0
-            rokit add Kampfkarren/selene@0.31.0
-            rokit add JohnnyMorganz/StyLua@2.5.2
+            rokit add rojo-rbx/rojo
+            rokit add Kampfkarren/selene
+            rokit add JohnnyMorganz/StyLua
             rokit install
           } > "$RUNNER_TEMP/rokit-install.log" 2>&1
       - name: Upload toolchain diagnostics
