@@ -1,0 +1,19 @@
+{
+  "name": "VikingChronologyRoblox",
+  "serveAllowedHosts": ["localhost", "127.0.0.1"],
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedFirst": {"$path": "src/ReplicatedFirst"},
+    "ReplicatedStorage": {"$path": "src/ReplicatedStorage"},
+    "ServerScriptService": {"$path": "src/ServerScriptService"},
+    "StarterPlayer": {
+      "$properties": {"AutoJumpEnabled": false, "CharacterWalkSpeed": 14, "CharacterJumpPower": 42, "CameraMaxZoomDistance": 48, "CameraMinZoomDistance": 4},
+      "StarterPlayerScripts": {"$path": "src/StarterPlayer/StarterPlayerScripts"}
+    },
+    "Workspace": {
+      "$properties": {"StreamingEnabled": true, "StreamingMinRadius": 64, "StreamingTargetRadius": 1024, "ModelStreamingBehavior": "Improved", "StreamingIntegrityMode": "PauseOutsideLoadedArea", "StreamOutBehavior": "Opportunistic", "Gravity": 196.2}
+    },
+    "Lighting": {"$properties": {"Technology": "Future", "Brightness": 2.1, "ClockTime": 7.4, "EnvironmentDiffuseScale": 0.42, "EnvironmentSpecularScale": 0.58, "GlobalShadows": true, "ShadowSoftness": 0.32, "ExposureCompensation": -0.15, "GeographicLatitude": 60}},
+    "SoundService": {"$properties": {"RespectFilteringEnabled": true, "DistanceFactor": 3.33, "DopplerScale": 0.35, "RolloffScale": 1.0}}
+  }
+}
