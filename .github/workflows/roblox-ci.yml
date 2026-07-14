@@ -33,9 +33,24 @@ jobs:
           curl -sSf https://raw.githubusercontent.com/rojo-rbx/rokit/main/scripts/install.sh | bash
           echo "$HOME/.rokit/bin" >> "$GITHUB_PATH"
       - name: Install pinned tools
+        id: install-tools
+        continue-on-error: true
         run: |
           export PATH="$HOME/.rokit/bin:$PATH"
-          rokit install
+          rokit install > "$RUNNER_TEMP/rokit-install.log" 2>&1
+      - name: Upload toolchain diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rokit-install-log
+          path: ${{ runner.temp }}/rokit-install.log
+          if-no-files-found: error
+          retention-days: 3
+      - name: Enforce toolchain installation
+        if: steps.install-tools.outcome != 'success'
+        run: |
+          cat "$RUNNER_TEMP/rokit-install.log"
+          exit 1
       - name: Parse and normalize Luau formatting
         run: stylua src
       - name: Luau lint
