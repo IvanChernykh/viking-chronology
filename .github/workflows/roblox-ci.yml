@@ -46,3 +46,10 @@ jobs:
         run: |
           mkdir -p build
           rojo build default.project.json --output build/VikingChronology.rbxlx
+      - name: Upload Roblox Studio place
+        uses: actions/upload-artifact@v4
+        with:
+          name: VikingChronology-Roblox-Place
+          path: roblox/build/VikingChronology.rbxlx
+          if-no-files-found: error
+          retention-days: 30
