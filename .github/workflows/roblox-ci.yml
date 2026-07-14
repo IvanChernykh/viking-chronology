@@ -32,12 +32,17 @@ jobs:
         run: |
           curl -sSf https://raw.githubusercontent.com/rojo-rbx/rokit/main/scripts/install.sh | bash
           echo "$HOME/.rokit/bin" >> "$GITHUB_PATH"
-      - name: Install pinned tools
+      - name: Trust and install pinned tools
         id: install-tools
         continue-on-error: true
         run: |
           export PATH="$HOME/.rokit/bin:$PATH"
-          rokit install > "$RUNNER_TEMP/rokit-install.log" 2>&1
+          {
+            rokit add rojo-rbx/rojo@7.7.0
+            rokit add Kampfkarren/selene@0.31.0
+            rokit add JohnnyMorganz/StyLua@2.5.2
+            rokit install
+          } > "$RUNNER_TEMP/rokit-install.log" 2>&1
       - name: Upload toolchain diagnostics
         if: always()
         uses: actions/upload-artifact@v4
