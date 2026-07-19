@@ -26,22 +26,7 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
       - name: Lint
-        id: lint
-        continue-on-error: true
-        run: npm run lint > "$RUNNER_TEMP/lint.log" 2>&1
-      - name: Upload lint diagnostics
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: lint-diagnostics
-          path: ${{ runner.temp }}/lint.log
-          if-no-files-found: error
-          retention-days: 3
-      - name: Enforce lint
-        if: steps.lint.outcome != 'success'
-        run: |
-          cat "$RUNNER_TEMP/lint.log"
-          exit 1
+        run: npm run lint
       - name: Strict TypeScript
         run: npm run typecheck
       - name: Production build
