@@ -1,4 +1,4 @@
-import type { ExpeditionId } from '../../data/expeditions';
+import { expeditionChapters, type ExpeditionId } from '../../data/expeditions';
 import {
   createInitialExpeditionState,
   EXPEDITION_SAVE_VERSION,
@@ -30,14 +30,20 @@ export function normaliseExpeditionState(
   const resources = isRecord(value.resources) ? value.resources : {};
   const ship = isRecord(value.ship) ? value.ship : {};
   const crew = isRecord(value.crew) ? value.crew : {};
-  const stage = value.stage === 'planning' || value.stage === 'voyage' || value.stage === 'arrived'
-    ? value.stage
-    : fallback.stage;
   const selectedChapterId = value.selectedChapterId === 'western-shore'
     || value.selectedChapterId === 'river-road'
     || value.selectedChapterId === 'north-atlantic'
     ? value.selectedChapterId
     : fallbackChapterId;
+  const selectedChapter = expeditionChapters.find((chapter) => chapter.id === selectedChapterId)
+    ?? expeditionChapters[0];
+  const validMilestoneIds = new Set(selectedChapter.milestones.map((milestone) => milestone.id));
+  const rawProgress = Math.min(1, Math.max(0, finiteNumber(value.progress, 0)));
+  const rawStage = value.stage === 'planning' || value.stage === 'voyage' || value.stage === 'arrived'
+    ? value.stage
+    : fallback.stage;
+  const stage = rawStage === 'voyage' && rawProgress >= 0.999 ? 'arrived' : rawStage;
+  const progress = stage === 'planning' ? 0 : stage === 'arrived' ? 1 : rawProgress;
   const consequences = Array.isArray(value.consequences)
     ? value.consequences.filter((entry): entry is ExpeditionSimulationState['consequences'][number] => {
         if (!isRecord(entry) || !isRecord(entry.effects)) return false;
@@ -49,12 +55,13 @@ export function normaliseExpeditionState(
           && typeof entry.summary === 'string';
       }).slice(-24)
     : [];
+  const rawActiveEncounterId = typeof value.activeEncounterId === 'string' ? value.activeEncounterId : null;
 
   return {
     version: EXPEDITION_SAVE_VERSION,
     selectedChapterId,
     stage,
-    progress: Math.min(1, Math.max(0, finiteNumber(value.progress, 0))),
+    progress,
     elapsedDays: Math.max(0, finiteNumber(value.elapsedDays, 0)),
     resources: {
       food: Math.min(100, Math.max(0, finiteNumber(resources.food, fallback.resources.food))),
@@ -75,9 +82,12 @@ export function normaliseExpeditionState(
     },
     silver: Math.max(0, Math.round(finiteNumber(value.silver, fallback.silver))),
     renown: Math.max(0, Math.round(finiteNumber(value.renown, fallback.renown))),
-    readyCrewIds: stringArray(value.readyCrewIds),
-    handledMilestoneIds: stringArray(value.handledMilestoneIds),
-    activeEncounterId: typeof value.activeEncounterId === 'string' ? value.activeEncounterId : null,
+    readyCrewIds: Array.from(new Set(stringArray(value.readyCrewIds))).slice(0, 3),
+    handledMilestoneIds: Array.from(new Set(stringArray(value.handledMilestoneIds)))
+      .filter((id) => validMilestoneIds.has(id)),
+    activeEncounterId: stage === 'voyage' && rawActiveEncounterId && validMilestoneIds.has(rawActiveEncounterId)
+      ? rawActiveEncounterId
+      : null,
     consequences,
   };
 }
