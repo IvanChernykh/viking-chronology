@@ -51,7 +51,6 @@ export interface ExpeditionSimulationState {
   handledMilestoneIds: string[];
   activeEncounterId: string | null;
   consequences: ConsequenceRecord[];
-  updatedAt: number;
 }
 
 export interface ReadinessAssessment {
@@ -99,7 +98,6 @@ export function createInitialExpeditionState(chapterId: ExpeditionId): Expeditio
     handledMilestoneIds: [],
     activeEncounterId: null,
     consequences: [],
-    updatedAt: Date.now(),
   };
 }
 
@@ -203,7 +201,6 @@ function advanceVoyage(
       fatigue: clampPercent(state.crew.fatigue + fatigueGain),
       health: clampPercent(state.crew.health - healthLoss),
     },
-    updatedAt: Date.now(),
   };
 
   const nextMilestone = chapter.milestones.find(
@@ -240,21 +237,18 @@ export function expeditionReducer(
         readyCrewIds: [],
         handledMilestoneIds: [],
         activeEncounterId: null,
-        updatedAt: Date.now(),
       };
     case 'adjustResource':
       if (state.stage !== 'planning') return state;
       return {
         ...state,
         resources: { ...state.resources, [action.key]: clampPercent(action.value) },
-        updatedAt: Date.now(),
       };
     case 'markCrewReady':
       if (state.readyCrewIds.includes(action.crewId)) return state;
       return {
         ...state,
         readyCrewIds: [...state.readyCrewIds, action.crewId],
-        updatedAt: Date.now(),
       };
     case 'launch':
       if (state.stage !== 'planning' || !assessReadiness(state, action.chapter).ready) return state;
@@ -265,7 +259,6 @@ export function expeditionReducer(
         elapsedDays: 0,
         handledMilestoneIds: [],
         activeEncounterId: null,
-        updatedAt: Date.now(),
       };
     case 'advance':
       return advanceVoyage(state, action.deltaSeconds, action.chapter, action.environment);
@@ -286,7 +279,6 @@ export function expeditionReducer(
         activeEncounterId: null,
         handledMilestoneIds: [...state.handledMilestoneIds, action.milestone.id],
         consequences: [...state.consequences, record].slice(-24),
-        updatedAt: Date.now(),
       };
     }
     case 'returnToCouncil': {
@@ -318,7 +310,6 @@ export function expeditionReducer(
         readyCrewIds: [],
         handledMilestoneIds: [],
         activeEncounterId: null,
-        updatedAt: Date.now(),
       };
     }
     case 'hydrate':
