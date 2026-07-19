@@ -79,7 +79,6 @@ export function normaliseExpeditionState(
     handledMilestoneIds: stringArray(value.handledMilestoneIds),
     activeEncounterId: typeof value.activeEncounterId === 'string' ? value.activeEncounterId : null,
     consequences,
-    updatedAt: finiteNumber(value.updatedAt, Date.now()),
   };
 }
 
