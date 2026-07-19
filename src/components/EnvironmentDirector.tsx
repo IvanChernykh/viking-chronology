@@ -1,6 +1,6 @@
 import { Sky, Stars } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
-import { useEffect, useMemo, useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import type { EnvironmentSnapshot } from '../game/environment/environmentModel';
 import type { RenderQuality } from '../types';
@@ -12,11 +12,10 @@ interface EnvironmentDirectorProps {
 }
 
 function ExposureController({ exposure }: { exposure: number }) {
-  const { gl } = useThree();
-
-  useEffect(() => {
-    gl.toneMappingExposure = exposure;
-  }, [exposure, gl]);
+  useFrame(({ gl }, rawDelta) => {
+    const delta = Math.min(rawDelta, 1 / 24);
+    gl.toneMappingExposure = THREE.MathUtils.damp(gl.toneMappingExposure, exposure, 5.5, delta);
+  });
 
   return null;
 }
