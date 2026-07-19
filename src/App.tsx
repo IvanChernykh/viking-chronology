@@ -65,6 +65,8 @@ function App() {
     }),
     [selectedChapter.id, simulation.progress, simulation.stage, timelineYear],
   );
+  const selectedChapterRef = useRef(selectedChapter);
+  const environmentRef = useRef(environment);
 
   useEffect(() => {
     window.__vikingBootComplete?.();
@@ -75,16 +77,17 @@ function App() {
   }, [simulation]);
 
   useEffect(() => {
+    selectedChapterRef.current = selectedChapter;
+    environmentRef.current = environment;
+  }, [environment, selectedChapter]);
+
+  useEffect(() => {
     const intervalId = window.setInterval(() => saveExpeditionState(simulationRef.current), 1500);
     return () => {
       window.clearInterval(intervalId);
       saveExpeditionState(simulationRef.current);
     };
   }, []);
-
-  useEffect(() => {
-    saveExpeditionState(simulation);
-  }, [simulation.activeEncounterId, simulation.selectedChapterId, simulation.stage]);
 
   useEffect(() => {
     audio.setScene(
@@ -112,8 +115,8 @@ function App() {
         dispatchSimulation({
           type: 'advance',
           deltaSeconds: simulationAccumulator.current * (isMobile ? 0.9 : 1),
-          chapter: selectedChapter,
-          environment,
+          chapter: selectedChapterRef.current,
+          environment: environmentRef.current,
         });
         simulationAccumulator.current = 0;
       }
@@ -123,7 +126,7 @@ function App() {
 
     frameId = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frameId);
-  }, [environment, isMobile, selectedChapter, simulation.activeEncounterId, simulation.stage]);
+  }, [isMobile, simulation.activeEncounterId, simulation.stage]);
 
   useEffect(() => {
     if (!activeEncounter) return;
@@ -131,9 +134,12 @@ function App() {
   }, [activeEncounter, audio]);
 
   useEffect(() => {
-    if (simulation.stage !== 'arrived' || selectedStop) return;
-    setSelectedStop(activeRoute.stops[activeRoute.stops.length - 1] ?? null);
-    audio.playSelection(selectedChapter.endYear);
+    if (simulation.stage !== 'arrived' || selectedStop) return undefined;
+    const timer = window.setTimeout(() => {
+      setSelectedStop(activeRoute.stops[activeRoute.stops.length - 1] ?? null);
+      audio.playSelection(selectedChapter.endYear);
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [activeRoute.stops, audio, selectedChapter.endYear, selectedStop, simulation.stage]);
 
   useEffect(() => {
