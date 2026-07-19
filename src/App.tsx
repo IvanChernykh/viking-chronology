@@ -9,14 +9,18 @@ import { Timeline } from './components/Timeline';
 import type { VikingCharacter } from './data/dialogues';
 import { defaultResources, expeditionChapters, type ExpeditionChoice, type ExpeditionMilestone, type ExpeditionResources } from './data/expeditions';
 import { routes, timelineBounds } from './data/routes';
+import { deriveEnvironmentSnapshot } from './game/environment/environmentModel';
+import type { GameStage } from './game/types';
 import { useMediaQuery } from './hooks/useMediaQuery';
 import { useVikingAudio } from './hooks/useVikingAudio';
 import { canSpeakDialogue, speakReconstructedNorse, stopDialogueSpeech } from './lib/dialogueSpeech';
 import type { RenderQuality, VikingStop } from './types';
 
 const VikingScene = lazy(() => import('./components/VikingScene').then((module) => ({ default: module.VikingScene })));
-type GameStage = 'planning' | 'voyage' | 'arrived';
-function clampResource(value: number): number { return Math.max(0, Math.min(100, Math.round(value))); }
+
+function clampResource(value: number): number {
+  return Math.max(0, Math.min(100, Math.round(value)));
+}
 
 function App() {
   const isMobile = useMediaQuery('(max-width: 760px)');
@@ -38,14 +42,41 @@ function App() {
   const [sceneResetKey, setSceneResetKey] = useState(0);
   const previousFrame = useRef<number | null>(null);
   const audio = useVikingAudio();
-  const selectedChapter = useMemo(() => expeditionChapters.find((chapter) => chapter.id === selectedChapterId) ?? expeditionChapters[0], [selectedChapterId]);
-  const activeRoute = useMemo(() => routes.find((route) => route.id === selectedChapter.routeId) ?? routes[0], [selectedChapter.routeId]);
-  const timelineYear = useMemo(() => selectedChapter.startYear + (selectedChapter.endYear - selectedChapter.startYear) * voyageProgress, [selectedChapter, voyageProgress]);
+  const selectedChapter = useMemo(
+    () => expeditionChapters.find((chapter) => chapter.id === selectedChapterId) ?? expeditionChapters[0],
+    [selectedChapterId],
+  );
+  const activeRoute = useMemo(
+    () => routes.find((route) => route.id === selectedChapter.routeId) ?? routes[0],
+    [selectedChapter.routeId],
+  );
+  const timelineYear = useMemo(
+    () => selectedChapter.startYear + (selectedChapter.endYear - selectedChapter.startYear) * voyageProgress,
+    [selectedChapter, voyageProgress],
+  );
+  const environment = useMemo(
+    () => deriveEnvironmentSnapshot({
+      chapterId: selectedChapter.id,
+      stage,
+      progress: voyageProgress,
+      year: timelineYear,
+    }),
+    [selectedChapter.id, stage, timelineYear, voyageProgress],
+  );
 
-  useEffect(() => { window.__vikingBootComplete?.(); }, []);
-  useEffect(() => { audio.setScene(stage === 'voyage' ? (selectedChapter.routeId === 'eastern-rivers' ? 'river' : 'open-sea') : 'settlement'); }, [audio, selectedChapter.routeId, stage]);
   useEffect(() => {
-    if (stage !== 'voyage' || activeEncounter) { previousFrame.current = null; return; }
+    window.__vikingBootComplete?.();
+  }, []);
+
+  useEffect(() => {
+    audio.setScene(stage === 'voyage' ? (selectedChapter.routeId === 'eastern-rivers' ? 'river' : 'open-sea') : 'settlement');
+  }, [audio, selectedChapter.routeId, stage]);
+
+  useEffect(() => {
+    if (stage !== 'voyage' || activeEncounter) {
+      previousFrame.current = null;
+      return;
+    }
     let frameId = 0;
     const tick = (timestamp: number) => {
       if (previousFrame.current === null) previousFrame.current = timestamp;
@@ -57,27 +88,46 @@ function App() {
     frameId = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frameId);
   }, [activeEncounter, isMobile, stage]);
+
   useEffect(() => {
     if (stage !== 'voyage') return;
-    const nextMilestone = selectedChapter.milestones.find((milestone) => voyageProgress >= milestone.progress && !handledMilestones.has(milestone.id));
+    const nextMilestone = selectedChapter.milestones.find(
+      (milestone) => voyageProgress >= milestone.progress && !handledMilestones.has(milestone.id),
+    );
     if (nextMilestone && !activeEncounter) {
-      const timer = window.setTimeout(() => { setActiveEncounter(nextMilestone); audio.playSelection(nextMilestone.year); }, 0);
+      const timer = window.setTimeout(() => {
+        setActiveEncounter(nextMilestone);
+        audio.playSelection(nextMilestone.year);
+      }, 0);
       return () => window.clearTimeout(timer);
     }
     return undefined;
   }, [activeEncounter, audio, handledMilestones, selectedChapter.milestones, stage, voyageProgress]);
+
   useEffect(() => {
     if (stage === 'voyage' && voyageProgress >= 0.999) {
-      const timer = window.setTimeout(() => { setStage('arrived'); setSelectedStop(activeRoute.stops[activeRoute.stops.length - 1] ?? null); audio.playSelection(selectedChapter.endYear); }, 0);
+      const timer = window.setTimeout(() => {
+        setStage('arrived');
+        setSelectedStop(activeRoute.stops[activeRoute.stops.length - 1] ?? null);
+        audio.playSelection(selectedChapter.endYear);
+      }, 0);
       return () => window.clearTimeout(timer);
     }
     return undefined;
   }, [activeRoute.stops, audio, selectedChapter.endYear, stage, voyageProgress]);
-  useEffect(() => { audio.playTimelineTick(Math.round(timelineYear / 5) * 5); }, [audio, timelineYear]);
+
+  useEffect(() => {
+    audio.playTimelineTick(Math.round(timelineYear / 5) * 5);
+  }, [audio, timelineYear]);
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
-      setSelectedStop(null); setActiveCharacter(null); setActiveEncounter(null); setMobilePanelOpen(false); stopDialogueSpeech();
+      setSelectedStop(null);
+      setActiveCharacter(null);
+      setActiveEncounter(null);
+      setMobilePanelOpen(false);
+      stopDialogueSpeech();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
@@ -85,33 +135,76 @@ function App() {
 
   const selectChapter = (chapter: typeof selectedChapter) => {
     if (stage === 'voyage') return;
-    setSelectedChapterId(chapter.id); setVoyageProgress(0); setSelectedStop(null); setHandledMilestones(new Set()); setActiveEncounter(null); setResources(defaultResources); setMorale(76);
+    setSelectedChapterId(chapter.id);
+    setVoyageProgress(0);
+    setSelectedStop(null);
+    setHandledMilestones(new Set());
+    setActiveEncounter(null);
+    setResources(defaultResources);
+    setMorale(76);
   };
-  const handleResourceChange = (key: keyof ExpeditionResources, value: number) => setResources((current) => ({ ...current, [key]: clampResource(value) }));
+
+  const handleResourceChange = (key: keyof ExpeditionResources, value: number) => {
+    setResources((current) => ({ ...current, [key]: clampResource(value) }));
+  };
+
   const openDialogue = (character: VikingCharacter) => {
-    setActiveCharacter(character); setDialogueIndex(0); setSelectedStop(null); setReadyCrew((current) => new Set(current).add(character.id));
-    speakReconstructedNorse(character.lines[0].oldNorse); audio.playSelection(character.id.length * 79);
+    setActiveCharacter(character);
+    setDialogueIndex(0);
+    setSelectedStop(null);
+    setReadyCrew((current) => new Set(current).add(character.id));
+    speakReconstructedNorse(character.lines[0].oldNorse);
+    audio.playSelection(character.id.length * 79);
     if (isCoarsePointer && 'vibrate' in navigator) navigator.vibrate(10);
   };
+
   const advanceDialogue = () => {
     if (!activeCharacter) return;
-    const next = (dialogueIndex + 1) % activeCharacter.lines.length; setDialogueIndex(next); speakReconstructedNorse(activeCharacter.lines[next].oldNorse);
+    const next = (dialogueIndex + 1) % activeCharacter.lines.length;
+    setDialogueIndex(next);
+    speakReconstructedNorse(activeCharacter.lines[next].oldNorse);
   };
+
   const launch = () => {
-    setStage('voyage'); setVoyageProgress(0.005); setSelectedStop(null); setActiveCharacter(null); setHandledMilestones(new Set()); setActiveEncounter(null); stopDialogueSpeech();
-    audio.playSelection(selectedChapter.startYear); if (!audio.enabled) void audio.toggle();
+    setStage('voyage');
+    setVoyageProgress(0.005);
+    setSelectedStop(null);
+    setActiveCharacter(null);
+    setHandledMilestones(new Set());
+    setActiveEncounter(null);
+    stopDialogueSpeech();
+    audio.playSelection(selectedChapter.startYear);
+    if (!audio.enabled) void audio.toggle();
   };
+
   const applyChoice = (choice: ExpeditionChoice) => {
-    setResources((current) => ({ food: clampResource(current.food + (choice.effects.food ?? 0)), timber: clampResource(current.timber + (choice.effects.timber ?? 0)), sailcloth: clampResource(current.sailcloth + (choice.effects.sailcloth ?? 0)) }));
+    setResources((current) => ({
+      food: clampResource(current.food + (choice.effects.food ?? 0)),
+      timber: clampResource(current.timber + (choice.effects.timber ?? 0)),
+      sailcloth: clampResource(current.sailcloth + (choice.effects.sailcloth ?? 0)),
+    }));
     setMorale((current) => clampResource(current + (choice.effects.morale ?? 0)));
     if (activeEncounter) setHandledMilestones((current) => new Set(current).add(activeEncounter.id));
     setActiveEncounter(null);
   };
-  const returnToCouncil = () => { setStage('planning'); setVoyageProgress(0); setSelectedStop(null); setActiveEncounter(null); setResources(defaultResources); setMorale(76); };
+
+  const returnToCouncil = () => {
+    setStage('planning');
+    setVoyageProgress(0);
+    setSelectedStop(null);
+    setActiveEncounter(null);
+    setResources(defaultResources);
+    setMorale(76);
+  };
+
   const handleSelectStop = (stop: VikingStop) => {
-    setSelectedStop(stop); setActiveCharacter(null); stopDialogueSpeech(); audio.playSelection(stop.year + stop.name.length);
+    setSelectedStop(stop);
+    setActiveCharacter(null);
+    stopDialogueSpeech();
+    audio.playSelection(stop.year + stop.name.length);
     if (isCoarsePointer && 'vibrate' in navigator) navigator.vibrate(12);
   };
+
   const navigateStory = (direction: -1 | 1) => {
     if (!selectedStop) return;
     const index = activeRoute.stops.findIndex((stop) => stop.id === selectedStop.id);
@@ -123,13 +216,31 @@ function App() {
       <div className="scene-layer">
         <SceneErrorBoundary resetKey={sceneResetKey} onRetry={() => setSceneResetKey((key) => key + 1)}>
           <Suspense fallback={<div className="scene-loading"><span /><strong>Строим исторический мир</strong><small>Фьорд, рельеф, судно и экспедиционный маршрут</small></div>}>
-            <VikingScene key={sceneResetKey} routes={routes} activeRouteId={activeRoute.id} timelineYear={timelineYear} voyageProgress={voyageProgress} stage={stage} selectedStop={selectedStop} renderQuality={renderQuality} isMobile={isMobile} readyCharacters={readyCrew} onSelectStop={handleSelectStop} onSpeakCharacter={openDialogue} />
+            <VikingScene
+              key={sceneResetKey}
+              routes={routes}
+              activeRouteId={activeRoute.id}
+              timelineYear={timelineYear}
+              voyageProgress={voyageProgress}
+              stage={stage}
+              selectedStop={selectedStop}
+              renderQuality={renderQuality}
+              isMobile={isMobile}
+              readyCharacters={readyCrew}
+              environment={environment}
+              onSelectStop={handleSelectStop}
+              onSpeakCharacter={openDialogue}
+            />
           </Suspense>
         </SceneErrorBoundary>
       </div>
       <header className="game-topbar">
         <div className="game-brand"><span className="game-brand__mark">ᚠ</span><div><span>Viking Chronology</span><small>Историческая экспедиция · 750–1021</small></div></div>
-        <div className="game-topbar__center"><span><History size={14} /> {Math.round(timelineYear)}</span><strong>{selectedChapter.title}</strong><span><ShieldCheck size={14} /> мораль {morale}</span></div>
+        <div className="game-topbar__center">
+          <span><History size={14} /> {Math.round(timelineYear)} · {environment.seasonLabel}</span>
+          <strong>{selectedChapter.title}</strong>
+          <span title={`${environment.weatherLabel}, ${environment.temperatureC} °C`}><ShieldCheck size={14} /> мораль {morale}</span>
+        </div>
         <div className="game-topbar__actions"><button type="button" onClick={() => void audio.toggle()} aria-label="Переключить звук">{audio.enabled ? <Volume2 size={18} /> : <VolumeX size={18} />}</button><button type="button" className="mobile-game-menu" onClick={() => setMobilePanelOpen((value) => !value)} aria-label="Открыть управление">{mobilePanelOpen ? <X size={18} /> : <Menu size={18} />}</button></div>
       </header>
       <div className={`game-left-panel ${mobilePanelOpen ? 'game-left-panel--open' : ''}`}>

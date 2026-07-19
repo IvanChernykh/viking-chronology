@@ -15,7 +15,7 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -25,5 +25,15 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm install --no-audit --no-fund
-      - name: Full quality gate
-        run: npm run check
+      - name: Lint
+        run: npm run lint
+      - name: Strict TypeScript
+        run: npm run typecheck
+      - name: Production build
+        run: npm run build
+      - name: Verify production output
+        run: npm run verify:production
+      - name: Standalone build
+        run: npm run standalone
+      - name: Verify standalone compatibility
+        run: npm run verify:standalone
