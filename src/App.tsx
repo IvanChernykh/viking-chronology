@@ -1,5 +1,5 @@
 import { Anchor, BookOpen, Compass, Headphones, History, Menu, ShieldCheck, Volume2, VolumeX, X } from 'lucide-react';
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { DialoguePanel } from './components/DialoguePanel';
 import { EncounterPanel } from './components/EncounterPanel';
 import { ExpeditionHUD } from './components/ExpeditionHUD';
@@ -7,10 +7,11 @@ import { SceneErrorBoundary } from './components/SceneErrorBoundary';
 import { StoryPanel } from './components/StoryPanel';
 import { Timeline } from './components/Timeline';
 import type { VikingCharacter } from './data/dialogues';
-import { defaultResources, expeditionChapters, type ExpeditionChoice, type ExpeditionMilestone, type ExpeditionResources } from './data/expeditions';
+import { expeditionChapters, type ExpeditionChoice, type ExpeditionResources } from './data/expeditions';
 import { routes, timelineBounds } from './data/routes';
 import { deriveEnvironmentSnapshot } from './game/environment/environmentModel';
-import type { GameStage } from './game/types';
+import { expeditionReducer } from './game/simulation/expeditionState';
+import { loadExpeditionState, saveExpeditionState } from './game/simulation/saveGame';
 import { useMediaQuery } from './hooks/useMediaQuery';
 import { useVikingAudio } from './hooks/useVikingAudio';
 import { canSpeakDialogue, speakReconstructedNorse, stopDialogueSpeech } from './lib/dialogueSpeech';
@@ -18,22 +19,15 @@ import type { RenderQuality, VikingStop } from './types';
 
 const VikingScene = lazy(() => import('./components/VikingScene').then((module) => ({ default: module.VikingScene })));
 
-function clampResource(value: number): number {
-  return Math.max(0, Math.min(100, Math.round(value)));
-}
-
 function App() {
   const isMobile = useMediaQuery('(max-width: 760px)');
   const isCoarsePointer = useMediaQuery('(pointer: coarse)');
+  const [simulation, dispatchSimulation] = useReducer(
+    expeditionReducer,
+    expeditionChapters[0].id,
+    loadExpeditionState,
+  );
   const [introOpen, setIntroOpen] = useState(true);
-  const [selectedChapterId, setSelectedChapterId] = useState(expeditionChapters[0].id);
-  const [stage, setStage] = useState<GameStage>('planning');
-  const [voyageProgress, setVoyageProgress] = useState(0);
-  const [resources, setResources] = useState<ExpeditionResources>(defaultResources);
-  const [morale, setMorale] = useState(76);
-  const [readyCrew, setReadyCrew] = useState<Set<string>>(new Set());
-  const [handledMilestones, setHandledMilestones] = useState<Set<string>>(new Set());
-  const [activeEncounter, setActiveEncounter] = useState<ExpeditionMilestone | null>(null);
   const [selectedStop, setSelectedStop] = useState<VikingStop | null>(null);
   const [activeCharacter, setActiveCharacter] = useState<VikingCharacter | null>(null);
   const [dialogueIndex, setDialogueIndex] = useState(0);
@@ -41,27 +35,35 @@ function App() {
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const [sceneResetKey, setSceneResetKey] = useState(0);
   const previousFrame = useRef<number | null>(null);
+  const simulationAccumulator = useRef(0);
+  const simulationRef = useRef(simulation);
   const audio = useVikingAudio();
+
   const selectedChapter = useMemo(
-    () => expeditionChapters.find((chapter) => chapter.id === selectedChapterId) ?? expeditionChapters[0],
-    [selectedChapterId],
+    () => expeditionChapters.find((chapter) => chapter.id === simulation.selectedChapterId) ?? expeditionChapters[0],
+    [simulation.selectedChapterId],
   );
   const activeRoute = useMemo(
     () => routes.find((route) => route.id === selectedChapter.routeId) ?? routes[0],
     [selectedChapter.routeId],
   );
+  const activeEncounter = useMemo(
+    () => selectedChapter.milestones.find((milestone) => milestone.id === simulation.activeEncounterId) ?? null,
+    [selectedChapter.milestones, simulation.activeEncounterId],
+  );
+  const readyCrew = useMemo(() => new Set(simulation.readyCrewIds), [simulation.readyCrewIds]);
   const timelineYear = useMemo(
-    () => selectedChapter.startYear + (selectedChapter.endYear - selectedChapter.startYear) * voyageProgress,
-    [selectedChapter, voyageProgress],
+    () => selectedChapter.startYear + (selectedChapter.endYear - selectedChapter.startYear) * simulation.progress,
+    [selectedChapter, simulation.progress],
   );
   const environment = useMemo(
     () => deriveEnvironmentSnapshot({
       chapterId: selectedChapter.id,
-      stage,
-      progress: voyageProgress,
+      stage: simulation.stage,
+      progress: simulation.progress,
       year: timelineYear,
     }),
-    [selectedChapter.id, stage, timelineYear, voyageProgress],
+    [selectedChapter.id, simulation.progress, simulation.stage, timelineYear],
   );
 
   useEffect(() => {
@@ -69,52 +71,70 @@ function App() {
   }, []);
 
   useEffect(() => {
-    audio.setScene(stage === 'voyage' ? (selectedChapter.routeId === 'eastern-rivers' ? 'river' : 'open-sea') : 'settlement');
-  }, [audio, selectedChapter.routeId, stage]);
+    simulationRef.current = simulation;
+  }, [simulation]);
 
   useEffect(() => {
-    if (stage !== 'voyage' || activeEncounter) {
+    const intervalId = window.setInterval(() => saveExpeditionState(simulationRef.current), 1500);
+    return () => {
+      window.clearInterval(intervalId);
+      saveExpeditionState(simulationRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    saveExpeditionState(simulation);
+  }, [simulation.activeEncounterId, simulation.selectedChapterId, simulation.stage]);
+
+  useEffect(() => {
+    audio.setScene(
+      simulation.stage === 'voyage'
+        ? (selectedChapter.routeId === 'eastern-rivers' ? 'river' : 'open-sea')
+        : 'settlement',
+    );
+  }, [audio, selectedChapter.routeId, simulation.stage]);
+
+  useEffect(() => {
+    if (simulation.stage !== 'voyage' || simulation.activeEncounterId) {
       previousFrame.current = null;
+      simulationAccumulator.current = 0;
       return;
     }
+
     let frameId = 0;
     const tick = (timestamp: number) => {
       if (previousFrame.current === null) previousFrame.current = timestamp;
       const delta = document.hidden ? 0 : Math.min((timestamp - previousFrame.current) / 1000, 0.08);
       previousFrame.current = timestamp;
-      setVoyageProgress((current) => Math.min(1, current + delta * (isMobile ? 0.018 : 0.022)));
+      simulationAccumulator.current += delta;
+
+      if (simulationAccumulator.current >= 0.18) {
+        dispatchSimulation({
+          type: 'advance',
+          deltaSeconds: simulationAccumulator.current * (isMobile ? 0.9 : 1),
+          chapter: selectedChapter,
+          environment,
+        });
+        simulationAccumulator.current = 0;
+      }
+
       frameId = requestAnimationFrame(tick);
     };
+
     frameId = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frameId);
-  }, [activeEncounter, isMobile, stage]);
+  }, [environment, isMobile, selectedChapter, simulation.activeEncounterId, simulation.stage]);
 
   useEffect(() => {
-    if (stage !== 'voyage') return;
-    const nextMilestone = selectedChapter.milestones.find(
-      (milestone) => voyageProgress >= milestone.progress && !handledMilestones.has(milestone.id),
-    );
-    if (nextMilestone && !activeEncounter) {
-      const timer = window.setTimeout(() => {
-        setActiveEncounter(nextMilestone);
-        audio.playSelection(nextMilestone.year);
-      }, 0);
-      return () => window.clearTimeout(timer);
-    }
-    return undefined;
-  }, [activeEncounter, audio, handledMilestones, selectedChapter.milestones, stage, voyageProgress]);
+    if (!activeEncounter) return;
+    audio.playSelection(activeEncounter.year);
+  }, [activeEncounter, audio]);
 
   useEffect(() => {
-    if (stage === 'voyage' && voyageProgress >= 0.999) {
-      const timer = window.setTimeout(() => {
-        setStage('arrived');
-        setSelectedStop(activeRoute.stops[activeRoute.stops.length - 1] ?? null);
-        audio.playSelection(selectedChapter.endYear);
-      }, 0);
-      return () => window.clearTimeout(timer);
-    }
-    return undefined;
-  }, [activeRoute.stops, audio, selectedChapter.endYear, stage, voyageProgress]);
+    if (simulation.stage !== 'arrived' || selectedStop) return;
+    setSelectedStop(activeRoute.stops[activeRoute.stops.length - 1] ?? null);
+    audio.playSelection(selectedChapter.endYear);
+  }, [activeRoute.stops, audio, selectedChapter.endYear, selectedStop, simulation.stage]);
 
   useEffect(() => {
     audio.playTimelineTick(Math.round(timelineYear / 5) * 5);
@@ -125,7 +145,6 @@ function App() {
       if (event.key !== 'Escape') return;
       setSelectedStop(null);
       setActiveCharacter(null);
-      setActiveEncounter(null);
       setMobilePanelOpen(false);
       stopDialogueSpeech();
     };
@@ -134,25 +153,21 @@ function App() {
   }, []);
 
   const selectChapter = (chapter: typeof selectedChapter) => {
-    if (stage === 'voyage') return;
-    setSelectedChapterId(chapter.id);
-    setVoyageProgress(0);
+    if (simulation.stage === 'voyage') return;
+    dispatchSimulation({ type: 'selectChapter', chapterId: chapter.id });
     setSelectedStop(null);
-    setHandledMilestones(new Set());
-    setActiveEncounter(null);
-    setResources(defaultResources);
-    setMorale(76);
+    setActiveCharacter(null);
   };
 
   const handleResourceChange = (key: keyof ExpeditionResources, value: number) => {
-    setResources((current) => ({ ...current, [key]: clampResource(value) }));
+    dispatchSimulation({ type: 'adjustResource', key, value });
   };
 
   const openDialogue = (character: VikingCharacter) => {
     setActiveCharacter(character);
     setDialogueIndex(0);
     setSelectedStop(null);
-    setReadyCrew((current) => new Set(current).add(character.id));
+    dispatchSimulation({ type: 'markCrewReady', crewId: character.id });
     speakReconstructedNorse(character.lines[0].oldNorse);
     audio.playSelection(character.id.length * 79);
     if (isCoarsePointer && 'vibrate' in navigator) navigator.vibrate(10);
@@ -166,35 +181,23 @@ function App() {
   };
 
   const launch = () => {
-    setStage('voyage');
-    setVoyageProgress(0.005);
+    dispatchSimulation({ type: 'launch', chapter: selectedChapter });
     setSelectedStop(null);
     setActiveCharacter(null);
-    setHandledMilestones(new Set());
-    setActiveEncounter(null);
     stopDialogueSpeech();
     audio.playSelection(selectedChapter.startYear);
     if (!audio.enabled) void audio.toggle();
   };
 
   const applyChoice = (choice: ExpeditionChoice) => {
-    setResources((current) => ({
-      food: clampResource(current.food + (choice.effects.food ?? 0)),
-      timber: clampResource(current.timber + (choice.effects.timber ?? 0)),
-      sailcloth: clampResource(current.sailcloth + (choice.effects.sailcloth ?? 0)),
-    }));
-    setMorale((current) => clampResource(current + (choice.effects.morale ?? 0)));
-    if (activeEncounter) setHandledMilestones((current) => new Set(current).add(activeEncounter.id));
-    setActiveEncounter(null);
+    if (!activeEncounter) return;
+    dispatchSimulation({ type: 'resolveEncounter', milestone: activeEncounter, choice });
   };
 
   const returnToCouncil = () => {
-    setStage('planning');
-    setVoyageProgress(0);
+    dispatchSimulation({ type: 'returnToCouncil' });
     setSelectedStop(null);
-    setActiveEncounter(null);
-    setResources(defaultResources);
-    setMorale(76);
+    setActiveCharacter(null);
   };
 
   const handleSelectStop = (stop: VikingStop) => {
@@ -212,7 +215,7 @@ function App() {
   };
 
   return (
-    <main className={`app-shell game-shell game-shell--${stage} ${introOpen ? 'game-shell--intro' : ''}`}>
+    <main className={`app-shell game-shell game-shell--${simulation.stage} ${introOpen ? 'game-shell--intro' : ''}`}>
       <div className="scene-layer">
         <SceneErrorBoundary resetKey={sceneResetKey} onRetry={() => setSceneResetKey((key) => key + 1)}>
           <Suspense fallback={<div className="scene-loading"><span /><strong>Строим исторический мир</strong><small>Фьорд, рельеф, судно и экспедиционный маршрут</small></div>}>
@@ -221,8 +224,8 @@ function App() {
               routes={routes}
               activeRouteId={activeRoute.id}
               timelineYear={timelineYear}
-              voyageProgress={voyageProgress}
-              stage={stage}
+              voyageProgress={simulation.progress}
+              stage={simulation.stage}
               selectedStop={selectedStop}
               renderQuality={renderQuality}
               isMobile={isMobile}
@@ -239,14 +242,22 @@ function App() {
         <div className="game-topbar__center">
           <span><History size={14} /> {Math.round(timelineYear)} · {environment.seasonLabel}</span>
           <strong>{selectedChapter.title}</strong>
-          <span title={`${environment.weatherLabel}, ${environment.temperatureC} °C`}><ShieldCheck size={14} /> мораль {morale}</span>
+          <span title={`${environment.weatherLabel}, ${environment.temperatureC} °C`}><ShieldCheck size={14} /> мораль {Math.round(simulation.crew.morale)} · корпус {Math.round(simulation.ship.hull)}</span>
         </div>
         <div className="game-topbar__actions"><button type="button" onClick={() => void audio.toggle()} aria-label="Переключить звук">{audio.enabled ? <Volume2 size={18} /> : <VolumeX size={18} />}</button><button type="button" className="mobile-game-menu" onClick={() => setMobilePanelOpen((value) => !value)} aria-label="Открыть управление">{mobilePanelOpen ? <X size={18} /> : <Menu size={18} />}</button></div>
       </header>
       <div className={`game-left-panel ${mobilePanelOpen ? 'game-left-panel--open' : ''}`}>
-        <ExpeditionHUD chapters={expeditionChapters} selected={selectedChapter} resources={resources} morale={morale} readyCrew={readyCrew.size} stage={stage} voyageProgress={voyageProgress} onSelect={selectChapter} onResourceChange={handleResourceChange} onLaunch={launch} onReturn={returnToCouncil} />
+        <ExpeditionHUD
+          chapters={expeditionChapters}
+          selected={selectedChapter}
+          simulation={simulation}
+          onSelect={selectChapter}
+          onResourceChange={handleResourceChange}
+          onLaunch={launch}
+          onReturn={returnToCouncil}
+        />
       </div>
-      <div className="game-timeline-wrap"><Timeline minYear={timelineBounds.min} maxYear={timelineBounds.max} year={timelineYear} playing={stage === 'voyage'} playbackSpeed={1} onYearChange={() => undefined} onTogglePlaying={() => undefined} onReset={returnToCouncil} onPlaybackSpeedChange={() => undefined} /></div>
+      <div className="game-timeline-wrap"><Timeline minYear={timelineBounds.min} maxYear={timelineBounds.max} year={timelineYear} playing={simulation.stage === 'voyage'} playbackSpeed={1} onYearChange={() => undefined} onTogglePlaying={() => undefined} onReset={returnToCouncil} onPlaybackSpeedChange={() => undefined} /></div>
       {selectedStop && <StoryPanel stop={selectedStop} route={activeRoute} onClose={() => setSelectedStop(null)} onPrevious={() => navigateStory(-1)} onNext={() => navigateStory(1)} />}
       {activeCharacter && <DialoguePanel character={activeCharacter} lineIndex={dialogueIndex} speechSupported={canSpeakDialogue()} onSpeak={() => speakReconstructedNorse(activeCharacter.lines[dialogueIndex].oldNorse)} onNext={advanceDialogue} onClose={() => { setActiveCharacter(null); stopDialogueSpeech(); }} />}
       {activeEncounter && <EncounterPanel milestone={activeEncounter} onChoose={applyChoice} />}
