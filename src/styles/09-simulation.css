@@ -1,0 +1,217 @@
+.campaign-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.campaign-meta > span {
+  display: grid;
+  gap: 3px;
+  padding: 8px;
+  color: #71857b;
+  border: 1px solid rgba(212, 179, 108, 0.09);
+  border-radius: 6px 12px;
+  background: rgba(255, 255, 255, 0.018);
+  font: 7px Arial, sans-serif;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.campaign-meta strong {
+  color: #d8c496;
+  font-size: 10px;
+}
+
+.simulation-section {
+  margin-top: 13px;
+  padding-top: 11px;
+  border-top: 1px solid rgba(212, 179, 108, 0.09);
+}
+
+.simulation-section__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #a9b7aa;
+  font: 700 8px Arial, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.condition-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  margin-top: 9px;
+}
+
+.condition-bar {
+  min-width: 0;
+  padding: 7px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.045);
+  border-radius: 5px 10px;
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.condition-bar > div:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: #809086;
+  font: 7px Arial, sans-serif;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.condition-bar strong {
+  color: #d9c89d;
+  font-size: 8px;
+}
+
+.condition-bar__track {
+  height: 3px;
+  margin-top: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.condition-bar__track > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #789b83;
+  transition: width 220ms ease;
+}
+
+.condition-bar--warning .condition-bar__track > span {
+  background: #bb8b4c;
+}
+
+.condition-bar--critical .condition-bar__track > span {
+  background: #a54e3d;
+}
+
+.condition-bar--critical strong {
+  color: #dc8b78;
+}
+
+.launch-blockers {
+  display: grid;
+  gap: 3px;
+  margin-top: 8px;
+}
+
+.launch-blockers p {
+  margin: 0;
+  color: #a47b68;
+  font: 7.5px/1.4 Arial, sans-serif;
+}
+
+.launch-blockers p::before {
+  content: "— ";
+  color: #c69a61;
+}
+
+.voyage-condition-stack {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  margin-top: 12px;
+  padding-top: 11px;
+  border-top: 1px solid rgba(212, 179, 108, 0.08);
+}
+
+.arrival-summary {
+  display: grid;
+  gap: 5px;
+  margin-top: 15px;
+  padding: 12px;
+  color: #82958a;
+  border: 1px solid rgba(116, 163, 125, 0.17);
+  border-radius: 7px 14px;
+  background: rgba(67, 112, 79, 0.08);
+  font: 8px/1.4 Arial, sans-serif;
+}
+
+.arrival-summary strong {
+  color: #bcd0bb;
+  font-size: 11px;
+}
+
+.consequence-ledger {
+  display: grid;
+  gap: 7px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(212, 179, 108, 0.09);
+}
+
+.consequence-ledger article {
+  padding: 8px 9px;
+  border-left: 2px solid rgba(212, 179, 108, 0.28);
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.consequence-ledger article strong {
+  color: #b9aa85;
+  font: 700 7.5px Arial, sans-serif;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.consequence-ledger article p {
+  margin: 4px 0 0;
+  color: #77877e;
+  font: 7.5px/1.45 Arial, sans-serif;
+}
+
+.encounter-effects {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.encounter-effects > span {
+  padding: 3px 5px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.13);
+  font: 7px Arial, sans-serif;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.encounter-effects .is-positive {
+  color: #84b793;
+  border-color: rgba(104, 166, 122, 0.18);
+}
+
+.encounter-effects .is-negative {
+  color: #cb806e;
+  border-color: rgba(184, 85, 65, 0.18);
+}
+
+@media (max-width: 760px) {
+  .campaign-meta,
+  .condition-grid,
+  .voyage-condition-stack {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .campaign-meta > span:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .condition-bar {
+    min-height: 42px;
+    padding: 8px 9px;
+  }
+
+  .encounter-effects > span {
+    font-size: 7.5px;
+  }
+}
